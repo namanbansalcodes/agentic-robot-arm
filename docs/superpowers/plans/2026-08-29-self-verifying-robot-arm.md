@@ -3180,7 +3180,19 @@ Must contain, all of it:
     prompt bytes, so that `make judge` works on a stranger's machine. Prompt-hash
     drift is measured and reported rather than hidden.
   - The L3 visual verifier's measured error rate on the occlusion scene.
-- **Citations** (both verified against arXiv on 2026-08-29 — use exactly these):
+- **Citations** (verified against arXiv; use exactly these):
+  - **PRIMARY ANCHOR** — *VoLo: A Physical Orchestrator for Open-Vocabulary Long-Horizon
+    Manipulation*, NVIDIA, arXiv:2606.07723 (June 2026). Its baseline family "single
+    action model (no orchestrator)" is our `one_shot` condition; its RoboVoLo benchmark
+    includes a Memory/State-Tracking suite (Order / Recall / Swap) that our three memory
+    scenes reproduce. Reported 42.9% vs 14.3% on a Franka FR3; 36.90% on Memory.
+    **We do not reproduce VoLo — that needs their benchmark and hardware. We test the
+    same hypothesis in a controlled miniature, and the README must say exactly that.**
+  - *MEM: Multi-Scale Embodied Memory for Vision Language Action Models*,
+    arXiv:2603.03596 (March 2026) — short-horizon memory for occlusions, long-horizon
+    memory for task progression. Motivates `mem_recall`, and its occlusion claim is
+    corroborated by our own measurement (arm occludes the bowl: no re-look 0/5).
+  - Origin reference, one line only:
   - Zhi, P., Zhang, Z., Han, M., Zhang, Z., Li, Z., Jiao, Z., et al. *Closed-Loop
     Open-Vocabulary Mobile Manipulation with GPT-4V* (COME-Robot), arXiv:2404.10220.
     The first closed-loop robotic system using a VLM for open-ended reasoning and
