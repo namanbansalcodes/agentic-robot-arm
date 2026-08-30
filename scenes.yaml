@@ -98,6 +98,6 @@ scenes:
     failure_mode: planner_error
     instruction: "Put the red block in the blue bowl."
     objects:
-      - {name: red_cube, kind: cube, color: red, position: [0.34, 0.26]}
+      - {name: red_cube, kind: cube, color: red, position: [0.27, 0.20]}
       - {name: blue_bowl, kind: bowl, color: blue, position: [0.02, 0.18]}
     success: {type: honest_failure, item: red_cube, container: blue_bowl}

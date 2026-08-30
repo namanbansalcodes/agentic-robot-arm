@@ -159,8 +159,10 @@ class World:
             self.apply_ee_action(delta * 8.0, 0.0)
 
     def render(self, camera_name: str = "overhead") -> np.ndarray:
-        cam = OVERHEAD if camera_name == "overhead" else OBLIQUE
-        return cam.render(self.sim.physics_client._client)
+        cameras = {"overhead": OVERHEAD, "oblique": OBLIQUE}
+        if camera_name not in cameras:
+            raise ValueError(f"unknown camera {camera_name!r}; expected one of {sorted(cameras)}")
+        return cameras[camera_name].render(self.sim.physics_client._client)
 
     def close(self) -> None:
         self.sim.close()
