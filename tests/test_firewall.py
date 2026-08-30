@@ -23,7 +23,14 @@ FORBIDDEN_MODULES = {"robotsim.oracle", "robotsim.world", "harness"}
 # `sim` and `physics_client` are the raw PyBullet handles; everything reachable
 # through them is ground truth. The prefixes cover the pose/proprioception
 # getters wholesale -- agent-side code reads joints via `io.joint_positions()`.
-FORBIDDEN_ATTRS = {"sim", "physics_client", "_bowl_centers",
+# `.oracle` and `.world` are NOT redundant with FORBIDDEN_MODULES. Python binds a
+# submodule as an attribute of its parent package as soon as ANY module in the
+# process imports it, and harness/ imports robotsim.oracle on every run. So a file
+# holding only a clean `import robotsim` can still reach ground truth via
+# `robotsim.oracle.get_object_pose(...)` -- and the module scan cannot see it,
+# because the import that creates the binding lives in harness/, not in the file
+# being scanned. Only the attribute scan can catch this.
+FORBIDDEN_ATTRS = {"sim", "physics_client", "_bowl_centers", "oracle", "world",
                    "getBasePositionAndOrientation", "getLinkState", "getContactPoints"}
 FORBIDDEN_ATTR_PREFIXES = ("get_base_", "get_link_", "get_joint_")
 
@@ -163,6 +170,9 @@ BREACHING_ATTRS = [
     "p.getBasePositionAndOrientation(0)",
     "p.getLinkState(body, 3)",
     "p.getContactPoints(a, b)",
+    # the package-attribute tunnel: `import robotsim` alone reads as clean
+    "pose = robotsim.oracle.get_object_pose('b')",
+    "bounds = robotsim.world.WORKSPACE",
 ]
 
 CLEAN_ATTRS = [
