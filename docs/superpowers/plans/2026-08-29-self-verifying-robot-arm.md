@@ -209,7 +209,7 @@ clean:
 - [ ] **Step 5: Run the test again**
 
 Run: `.venv/bin/pytest tests/test_firewall.py -v`
-Expected: PASS (4 tests — two parametrized pairs plus the non-empty guard fails until Task 2 adds a module; if it still fails on emptiness, that is correct — proceed to Task 2 and re-run).
+Expected: PASS, 5 tests (two parametrized tests x two packages = 4, plus the non-vacuity guard).
 
 - [ ] **Step 6: Commit**
 
