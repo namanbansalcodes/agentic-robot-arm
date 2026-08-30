@@ -226,3 +226,47 @@ def test_dynamic_detector_catches_breach(source):
 @pytest.mark.parametrize("source", CLEAN_DYNAMIC)
 def test_dynamic_detector_allows_clean(source):
     assert _dynamic_breaches(ast.parse(source)) == [], f"false positive on: {source!r}"
+
+
+# --- the call-site half -------------------------------------------------------
+# RobotIO guarantees what the agent HOLDS. It cannot guarantee what the agent is
+# HANDED: a harness that passes a World or an Oracle alongside the RobotIO voids the
+# whole firewall, and no import or attribute scan can see that -- the parameter is a
+# bare Name, not an Attribute. Blocking the parameter NAMES is the most a static scan
+# can do, and it is enough to stop the accidental version (annotating the type is
+# already impossible agent-side, since importing robotsim.world/oracle is blocked).
+FORBIDDEN_PARAM_NAMES = {"world", "oracle", "sim", "physics_client", "ground_truth"}
+
+
+def _injected_params(tree: ast.AST):
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        args = node.args
+        for arg in [*args.posonlyargs, *args.args, *args.kwonlyargs,
+                    args.vararg, args.kwarg]:
+            if arg is not None and arg.arg in FORBIDDEN_PARAM_NAMES:
+                yield arg.lineno, f"{node.name}({arg.arg}=...)"
+
+
+@pytest.mark.parametrize("package", BLINDFOLDED)
+def test_no_ground_truth_passed_in_as_a_parameter(package):
+    offenders = []
+    for path in _python_files(package):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for lineno, what in _injected_params(tree):
+            offenders.append(f"{path.relative_to(REPO)}:{lineno} accepts {what}")
+    assert offenders == [], "ground truth injected at the call site:\n" + "\n".join(offenders)
+
+
+@pytest.mark.parametrize("src,should_flag", [
+    ("def act(self, oracle):\n    return oracle.position_of('c')", True),
+    ("def act(self, world):\n    return world.sim", True),
+    ("def act(self, *, ground_truth):\n    pass", True),
+    ("def act(self, io, api):\n    return io.render()", False),
+    ("def act(self, detections, instruction):\n    pass", False),
+])
+def test_param_detector_flags_injection(src, should_flag):
+    """Positive control: prove the call-site scan detects, so it cannot rot silently."""
+    found = list(_injected_params(ast.parse(src)))
+    assert bool(found) is should_flag, f"{src!r} -> {found}"
