@@ -2979,11 +2979,38 @@ Contents, in this order:
 Run: `make report && open results/report.html`
 Expected: every number present, chart renders, all trajectory links resolve.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 4: Add a `make evidence` target — committed, curated proof**
+
+`results/` is gitignored (a full run writes thousands of PNGs, ~36 MB). But agent
+trajectories are a **required submission deliverable** and a judge may read before
+running anything. Resolve it by committing a curated subset, not the bulk:
+
+Add to `harness/report.py` an `--evidence` mode, and to the `Makefile`:
+
+```makefile
+evidence:
+	$(PY) -m harness.report --evidence
+	@echo "curated evidence written to docs/evidence/"
+```
+
+`--evidence` copies into `docs/evidence/`, with images rewritten to relative paths:
+- `report.md` and `report.html` (the full headline numbers)
+- `episodes.jsonl` (every episode record — small, no images)
+- one representative trajectory page **per failure mode, for both `baseline` and
+  `agent`** (so ~12 episodes), each with only the images that page references
+- `index.html` linking them, with the baseline/agent pair for each failure mode side
+  by side — that pairing is the fastest way for a judge to see the difference
+
+Expected size: roughly 3 MB. Verify with `du -sh docs/evidence/` before committing.
+
+- [ ] **Step 5: Generate, eyeball, commit**
+
+Run: `make report && make evidence && open docs/evidence/index.html`
+Expected: every link resolves with no network access and no missing images.
 
 ```bash
-git add harness/report.py harness/trajectory.py
-git commit -m "feat: auto-generated report with honesty gap, ablation ladder, and trajectory pages"
+git add harness/report.py harness/trajectory.py docs/evidence/ Makefile
+git commit -m "feat: auto-generated report, trajectory pages, and curated committed evidence"
 ```
 
 ---
@@ -2999,8 +3026,13 @@ git commit -m "feat: auto-generated report with honesty gap, ablation ladder, an
 ```bash
 set -a && . ./SECRETS && set +a
 make judge-live 2>&1 | tee results/live_run.log
-git add cache/ results/ && git commit -m "chore: freeze replay cache from the full live run"
+make evidence
+cp results/live_run.log docs/evidence/live_run.log
+git add cache/ docs/evidence/ && git commit -m "chore: freeze replay cache and evidence from the full live run"
 ```
+
+Note `results/` itself stays gitignored — the committed proof is `cache/` (which makes
+`make judge` reproduce everything offline) plus the curated `docs/evidence/`.
 Expected: 5 conditions × 10 scenes × 3 seeds = 150 episodes. Record the true wall time
 and dollar cost from the log — those exact numbers go in `REPRODUCTION.md`.
 
