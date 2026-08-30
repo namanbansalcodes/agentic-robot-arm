@@ -110,12 +110,16 @@ def test_l3_is_never_paid_for_when_a_free_layer_already_failed():
 
 
 def test_l3_asks_a_narrow_question_naming_both_objects():
+    """Names come from the primitive's own arguments, not the scene: a multi-block
+    scene has several graded pairs, so a scene-derived question could only say
+    "the block"."""
     stub = StubClient()
     v = Verifier(VerificationConfig(l3=True), stub)
-    v.check(_fb(primitive="place", status="ok", fingers_width=0.07), subtask="placed",
-            scene=_Scene(), image_png=b"png", step_index=1)
+    v.check(_fb(primitive="place", args={"target_id": "blue_bowl_1"}, status="ok",
+                fingers_width=0.07),
+            subtask="placed", scene=_Scene(), image_png=b"png", step_index=1)
     q = stub.last_call.text.lower()
-    assert "red cube" in q and "blue bowl" in q
+    assert "blue bowl 1" in q, q
     assert q.count("?") == 1, "one narrow question, not an open-ended assessment"
 
 
@@ -194,3 +198,25 @@ def test_verify_frame_is_not_rendered_when_l3_is_off():
     assert io_off.renders == 0
     assert len(_verify_frame(io_on, VerificationConfig(l3=True))) > 0
     assert io_on.renders == 1
+
+
+def test_l3_question_names_the_object_this_step_touched():
+    """Regression: after the schema moved to multi-pair success specs, the question
+    degraded to a generic 'Is the block inside the bowl?'. On a task with several
+    blocks that is exactly the vague phrasing this layer exists to avoid."""
+    stub = StubClient()
+    v = Verifier(VerificationConfig(l3=True), stub)
+    v.check(_fb(primitive="grasp", args={"object_id": "yellow_cube_1"}, status="ok",
+                fingers_width=0.045),
+            subtask="grasped", scene=_Scene(), image_png=b"png", step_index=1)
+    q = stub.last_call.text.lower()
+    assert "yellow cube 1" in q, q
+    assert q.count("?") == 1
+
+    stub2 = StubClient()
+    v2 = Verifier(VerificationConfig(l3=True), stub2)
+    v2.check(_fb(primitive="place", args={"target_id": "green_bowl_1"}, status="ok",
+                 fingers_width=0.08),
+             subtask="placed", scene=_Scene(), image_png=b"png", step_index=2)
+    q2 = stub2.last_call.text.lower()
+    assert "green bowl 1" in q2, q2

@@ -104,7 +104,7 @@ class Verifier:
         if (self.config.l3
                 and (subtask is not None or self.config.verify_every_primitive)
                 and scene is not None):
-            question = self._question(subtask, scene)
+            question = self._question(subtask, scene, feedback)
             call = VLMCall(
                 scene_id=getattr(scene, "id", "unknown"),
                 condition=self.config.label,
@@ -142,14 +142,21 @@ class Verifier:
         return Verdict(True)
 
     @staticmethod
-    def _question(subtask: Optional[str], scene) -> str:
-        """One narrow yes/no question, naming both objects.
+    def _question(subtask: Optional[str], scene, feedback=None) -> str:
+        """One narrow yes/no question, naming the objects THIS step actually touched.
 
         Narrow questions get reliable answers; "assess the situation" does not. The
         ids are de-underscored so the question reads as English about the photo
         ("the red cube") rather than as a symbol the inspector must resolve.
+
+        The names come from the primitive's own arguments, not from the scene's
+        success spec. On a multi-block task the scene has several graded pairs, so a
+        scene-derived question would have to say "the block" and "the bowl" -- which
+        is exactly the vague phrasing this layer exists to avoid. The arguments say
+        which block and which bowl this step was about, which is what we want asked.
         """
-        item = getattr(scene.success, "item", "block").replace("_", " ")
-        container = getattr(scene.success, "container", "bowl").replace("_", " ")
+        args = dict(getattr(feedback, "args", {}) or {})
+        item = (args.get("object_id") or "block").replace("_", " ")
+        container = (args.get("target_id") or "bowl").replace("_", " ")
         template = VERIFY_QUESTIONS.get(subtask or "placed", VERIFY_QUESTIONS["placed"])
         return template.format(item=item, container=container)
