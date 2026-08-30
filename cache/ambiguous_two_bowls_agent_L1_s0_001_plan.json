@@ -1,0 +1,18 @@
+{
+  "prompt_hash": "3b79ab6208ce5696",
+  "response": {
+    "input_tokens": 2240,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 157,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "question": "Which bowl should I put the red block in?"
+        },
+        "id": "call_740207",
+        "name": "ask_human"
+      }
+    ]
+  }
+}

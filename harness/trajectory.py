@@ -61,13 +61,17 @@ def aperture_class(width: float) -> str:
 def step_dicts(result) -> Optional[list]:
     """The per-step trace, if this results record actually carries one.
 
-    `EpisodeResult.steps` is typed `int` in the persisted schema -- it stores
-    `len(trace.steps)`, not the steps -- so a page built from a JSONL file gets a
-    count and nothing else. Rather than crash or, worse, render a plausible-looking
-    empty trajectory, this returns None and the page says out loud that the trace is
-    not in the file. When the caller hands in live EpisodeResults whose `steps` is the
-    list of step dicts, the full page renders.
+    Records written after the schema fix carry `trace_steps`, the full per-step list.
+    Older records stored only `len(trace.steps)` in an int `steps` field, so a page
+    built from one gets a count and nothing else. Rather than crash or, worse, render
+    a plausible-looking empty trajectory, this returns None and the page says out loud
+    that the trace is not in the file.
     """
+    # Preferred source: the dedicated trace field added to the persisted schema.
+    trace = getattr(result, "trace_steps", None)
+    if isinstance(trace, list) and trace:
+        return trace
+    # Fallback: a live EpisodeResult whose `steps` is still the list itself.
     steps = getattr(result, "steps", None)
     if isinstance(steps, list):
         return steps

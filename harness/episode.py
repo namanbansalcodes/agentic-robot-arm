@@ -116,6 +116,7 @@ def run_episode(scene, seed: int, client, config, out_dir, condition=None) -> Ep
         asked_human=bool(asked_human),
         recoveries=int(trace.recoveries),
         steps=len(trace.steps),
+        trace_steps=trace.steps,
         vlm_calls=int(getattr(client, "calls", 0)),
         input_tokens=int(getattr(client, "input_tokens", 0)),
         output_tokens=int(getattr(client, "output_tokens", 0)),

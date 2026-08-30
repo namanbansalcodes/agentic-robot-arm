@@ -10,14 +10,14 @@
         "args": {
           "object_id": "red_cube_1"
         },
-        "id": "call_392980",
+        "id": "call_560796",
         "name": "grasp"
       },
       {
         "args": {
           "target_id": "blue_bowl_1"
         },
-        "id": "call_392981",
+        "id": "call_560797",
         "name": "place"
       },
       {
@@ -25,7 +25,7 @@
           "reason": "Put the red block in the blue bowl",
           "success": true
         },
-        "id": "call_392982",
+        "id": "call_560798",
         "name": "report_done"
       }
     ]

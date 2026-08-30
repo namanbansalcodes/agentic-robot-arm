@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 import pathlib
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 
 
 @dataclass
@@ -35,13 +35,18 @@ class EpisodeResult:
     actual_success: bool
     asked_human: bool
     recoveries: int
-    steps: int
+    steps: int                       # count, kept for the report's summary columns
+    # The full per-step trace: primitive, args, the model's own reasoning, the raw
+    # feedback, and which verification layer objected. This is what the trajectory
+    # pages render, and "agent trajectories" is a required deliverable -- storing only
+    # the count would have produced pages with headers and no evidence under them.
     vlm_calls: int
     input_tokens: int
     output_tokens: int
     cost_usd: float
     drift: int
     episode_id: str
+    trace_steps: list = field(default_factory=list)
     claim_reason: str = ""
     stop_reason: str = ""
     wall_seconds: float = 0.0

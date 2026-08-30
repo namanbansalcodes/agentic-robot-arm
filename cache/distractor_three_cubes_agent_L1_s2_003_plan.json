@@ -1,0 +1,18 @@
+{
+  "prompt_hash": "9a0734ec5c050a4f",
+  "response": {
+    "input_tokens": 2291,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 396,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "question": "I do not see a green block on the table. Would you like me to put the red or yellow block in the blue bowl instead?"
+        },
+        "id": "call_516859",
+        "name": "ask_human"
+      }
+    ]
+  }
+}

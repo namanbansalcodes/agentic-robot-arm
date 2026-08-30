@@ -1,0 +1,16 @@
+{
+  "prompt_hash": "beacfeea0634efd3",
+  "response": {
+    "input_tokens": 2203,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 264,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {},
+        "id": "call_380908",
+        "name": "look"
+      }
+    ]
+  }
+}

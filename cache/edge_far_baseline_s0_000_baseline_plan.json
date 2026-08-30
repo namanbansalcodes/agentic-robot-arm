@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "db074db6daca54ba",
+  "response": {
+    "input_tokens": 1955,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 161,
+    "text": "```json\n[\n  {\"name\": \"grasp\", \"arguments\": {\"object_id\": \"red_cube_1\"}},\n  {\"name\": \"place\", \"arguments\": {\"target_id\": \"blue_bowl_1\"}},\n  {\"name\": \"report_done\", \"arguments\": {\"success\": true, \"reason\": \"Put the red block in the blue bowl.\"}}\n]\n```",
+    "tool_calls": []
+  }
+}

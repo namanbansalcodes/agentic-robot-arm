@@ -1,0 +1,33 @@
+{
+  "prompt_hash": "ea37205dad91778b",
+  "response": {
+    "input_tokens": 1955,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 142,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_447496",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_447497",
+        "name": "place"
+      },
+      {
+        "args": {
+          "reason": "The red block has been picked up and placed into the blue bowl.",
+          "success": true
+        },
+        "id": "call_447498",
+        "name": "report_done"
+      }
+    ]
+  }
+}

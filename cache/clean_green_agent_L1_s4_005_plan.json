@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "96a16defe3298b06",
+  "response": {
+    "input_tokens": 2261,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 163,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The green cube has been successfully placed inside the blue bowl, as shown in the photo and confirmed by the detection list.",
+          "success": true
+        },
+        "id": "call_348525",
+        "name": "report_done"
+      }
+    ]
+  }
+}

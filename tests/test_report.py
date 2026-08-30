@@ -493,3 +493,31 @@ def test_evidence_report_never_links_a_page_it_did_not_ship(tmp_path):
     full = (source / "report.md").read_text(encoding="utf-8")
     assert len(set(re.findall(r"trajectories/([A-Za-z0-9_]+\.html)", full))) == \
         len(results)
+
+
+def test_trajectory_prefers_the_persisted_trace_steps(tmp_path):
+    """Regression: EpisodeResult.steps is an int count, so trajectory pages were
+    rendering headers with no frames, no reasoning and no verdicts -- gutting a
+    required deliverable. trace_steps carries the real trace."""
+    from harness.metrics import EpisodeResult
+    from harness.trajectory import render_trajectory, step_dicts
+
+    step = {"primitive": "grasp", "args": {"object_id": "red_cube_1"},
+            "reasoning": "the red cube is the target",
+            "feedback": {"primitive": "grasp", "args": {}, "status": "ok", "error": None,
+                         "fingers_width": 0.044, "ee_position": (0.0, 0.0, 0.2),
+                         "detections": [], "image_path": None, "sim_steps": 3, "note": None},
+            "verdict": {"ok": True, "layer": None, "reason": "", "informational": False}}
+    result = EpisodeResult(
+        condition="agent", scene_id="clean_center", seed=0, failure_mode="none",
+        instruction="Put the red block in the blue bowl.", claimed_success=True,
+        actual_success=True, asked_human=False, recoveries=0, steps=1,
+        vlm_calls=2, input_tokens=10, output_tokens=2, cost_usd=0.001, drift=0,
+        episode_id="agent_clean_center_s0", trace_steps=[step])
+
+    assert step_dicts(result) == [step]
+    page = render_trajectory(result, tmp_path)
+    html = page.read_text()
+    assert "the red cube is the target" in html
+    assert "red_cube_1" in html
+    assert "no step" not in html.lower()

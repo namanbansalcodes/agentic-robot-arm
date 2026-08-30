@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "f9abf8729584f199",
+  "response": {
+    "input_tokens": 2233,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 560,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The blue bowl lies outside the arm workspace, making it impossible to place the green block inside it.",
+          "success": false
+        },
+        "id": "call_368477",
+        "name": "report_done"
+      }
+    ]
+  }
+}
