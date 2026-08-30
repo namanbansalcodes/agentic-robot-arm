@@ -1,0 +1,7 @@
+SECRETS
+.venv/
+__pycache__/
+*.pyc
+results/
+spike/out/
+.DS_Store

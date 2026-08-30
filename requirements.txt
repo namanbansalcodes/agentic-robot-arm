@@ -1,0 +1,11 @@
+# Pinned. Built and verified on macOS 15 arm64 / CPython 3.11.6, 2026-08-29.
+pybullet==3.2.6
+panda-gym==3.0.7
+gymnasium==0.29.1
+numpy==1.26.4
+scipy==1.17.1
+opencv-python-headless==4.10.0.84
+pillow==10.4.0
+pyyaml==6.0.2
+google-genai==2.20.0
+pytest==8.3.3
