@@ -60,13 +60,14 @@ class RobotIO:
         forwarded too -- World.retract replays the last applied grasp command by
         default, which is what keeps a held cube held (see World.retract).
 
-        step_count is advanced by the steps World.retract actually spent, which is
-        why this counts them itself instead of calling self.apply_ee_action.
+        NOTE on the budget: World.retract drives the arm itself and can spend up to
+        200 simulator steps, but it does not report how many it used, so step_count
+        can only be charged a flat 1 here. The agent's step budget therefore UNDER-
+        counts retraction. That is a known understatement, not an oversight -- if the
+        budget is ever meant to bound real simulator work rather than agent decisions,
+        World.retract must return its step count and this passthrough must add it.
         """
         result = self.__world.retract(finger_cmd)
-        # retract() drives the arm with apply_ee_action internally; those steps are
-        # real simulator steps and must show up in the agent's budget. We cannot see
-        # how many it took, so charge the conservative floor of one step per call.
         self.__steps += 1
         return result
 
