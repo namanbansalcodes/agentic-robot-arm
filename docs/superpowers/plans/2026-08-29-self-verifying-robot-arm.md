@@ -1117,9 +1117,15 @@ class RobotIO:
         self.__world.settle(steps)
         self.__steps += steps
 
-    def retract(self) -> None:
-        """Park the arm clear of the overhead camera before imaging."""
-        self.__world.retract()
+    def retract(self, finger_cmd: float | None = None) -> bool:
+        """Park the arm clear of the overhead camera. Returns True if it got there.
+
+        AMENDED: World.retract now replays the last applied finger command and returns
+        a bool. Passing a constant 0.0 was measured to ratchet the gripper open and
+        drop a held cube ~11% of the time (24/27 vs 27/27); returning None hid failed
+        retractions, which hand back an arm-occluded frame.
+        """
+        return self.__world.retract(finger_cmd)
 
     # --- proprioception --------------------------------------------------
     def ee_position(self) -> np.ndarray:
@@ -1566,8 +1572,15 @@ class PrimitiveAPI:
         # the frame edge -- deliberately, so the agent gets a second, visual cue about
         # what it is carrying. It also means a held block can be re-detected as a table
         # object; that is a real perception flaw the aperture check (L2) resolves.
-        self.io.retract()
-        return self._feedback("look", {}, "ok")
+        reached = self.io.retract()
+        fb = self._feedback("look", {}, "ok")
+        if not reached:
+            # A failed retraction leaves the arm over the table, occluding the very
+            # view this call exists to produce. Say so rather than returning a
+            # silently degraded frame the agent will reason about as if it were clean.
+            fb.note = ("retract did not reach the home pose; the arm may be occluding "
+                       "part of the table in this image")
+        return fb
 
     def move_to(self, target_id: str, offset: str = "above") -> Feedback:
         det = self._detections.get(target_id)
