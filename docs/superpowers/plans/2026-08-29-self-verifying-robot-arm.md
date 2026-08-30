@@ -100,8 +100,16 @@ import pytest
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 BLINDFOLDED = ["agent", "primitives"]
-FORBIDDEN_MODULES = {"robotsim.oracle", "harness"}
-FORBIDDEN_ATTRS = {"get_base_position", "get_base_orientation", "_sim", "getBasePositionAndOrientation"}
+# AMENDED after Task 1 quality review -- robotsim.world was the shortest path to
+# ground truth (World exposes .sim and ._bowl_centers) and was not blocked.
+# Safe to block: robotsim/io.py is the only module that legitimately needs World,
+# and it lives inside robotsim/, which is never scanned.
+FORBIDDEN_MODULES = {"robotsim.oracle", "robotsim.world", "harness"}
+FORBIDDEN_ATTRS = {"sim", "physics_client", "_bowl_centers",
+                   "getBasePositionAndOrientation", "getLinkState", "getContactPoints"}
+# Prefix matching, so a ground-truth accessor added upstream by panda-gym is blocked
+# by default rather than by remembering to update this file.
+FORBIDDEN_ATTR_PREFIXES = ("get_base_", "get_link_", "get_joint_")
 
 
 def _python_files(package: str):
@@ -214,8 +222,36 @@ Expected: PASS, 5 tests (two parametrized tests x two packages = 4, plus the non
 - [ ] **Step 6: Commit**
 
 ```bash
-git init && git add -A && git commit -m "chore: project skeleton, Makefile, ground-truth firewall test"
+git add -A && git commit -m "chore: project skeleton, Makefile, ground-truth firewall test"
 ```
+
+> **Amendments from the Task 1 quality review** (all implemented; listed here so later
+> spec reviews compare against the real contract):
+> 1. `robotsim.world` added to `FORBIDDEN_MODULES` — CRITICAL, it was the shortest
+>    path to ground truth from agent-side code.
+> 2. `robotsim/__init__.py` must stay import-free, guarded by its own test —
+>    `import robotsim` is legal agent-side, so a re-export there would bypass the scan.
+> 3. **Positive-control tests.** Every original assertion was `assert offenders == []`,
+>    so a gutted detector would have passed forever and the project's headline claim
+>    would have quietly become false. Parametrized `BREACHES` / `CLEAN` corpora now
+>    prove the detector detects, sharing one predicate with the real scan.
+> 4. `FORBIDDEN_ATTRS` rewritten with prefix matching; `_sim` was dead (`World`
+>    exposes `.sim`, public).
+> 5. `encoding="utf-8"` on every `read_text()` — these sources contain em dashes and
+>    the test would crash under `LC_ALL=C` rather than report a breach.
+> 6. `from .. import harness` now caught; import breaches now report line numbers.
+> 7. A deliberately-simple dynamic-import guard (`__import__`/`eval`/`exec`/`importlib`),
+>    with a comment stating that this firewall defends against accidental architectural
+>    drift by a cooperating author, not against a saboteur.
+> 8. Makefile: `judge: test` (the headline target proves the firewall before printing
+>    numbers), `.DEFAULT_GOAL := help` plus a `help` target so a bare `make` cannot
+>    rebuild the venv, and the report-path echo copied to `judge-live`.
+>
+> **Two gaps an AST scan structurally cannot close**, both covered by Task 5 instead:
+> runtime dependency injection (passing a `World` where a `RobotIO` is expected) and
+> re-export through a permitted module. `test_surface_is_exactly_the_allowed_set` and
+> `test_io_cannot_reach_object_poses` are the other half of this guarantee — neither
+> half may be deleted on the assumption that the other covers it.
 
 ---
 
