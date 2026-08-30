@@ -3145,6 +3145,23 @@ Must contain, all of it:
   should be ordered by cost, and the honesty gap — not the success rate — is the
   metric that separates a demo from a system.
 
+- [ ] **Step 5b: Freeze an exact lock file**
+
+`requirements.txt` pins our direct dependencies but not their transitives (installing
+`pytest==8.3.3` pulled in unpinned `iniconfig`, `packaging`, `pluggy`). Reproducibility
+is 15% of the rubric and "it worked on my machine six months ago" is exactly what a
+lock file is for:
+
+```bash
+VIRTUAL_ENV=.venv uv pip freeze > requirements.lock.txt
+git add requirements.lock.txt && git commit -m "chore: freeze exact dependency lock"
+```
+
+Keep BOTH files and say why in `REPRODUCTION.md`: `requirements.txt` is the readable
+statement of intent that `make setup` installs, and `requirements.lock.txt` is the
+exact byte-for-byte environment the reported numbers were produced on. If a judge
+gets a different result, diffing against the lock is the first thing to try.
+
 - [ ] **Step 6: Write `REPRODUCTION.md` for a stranger on a clean machine**
 
 Exact commands, pinned versions, the macOS pybullet `CFLAGS` fix and *why* it is
