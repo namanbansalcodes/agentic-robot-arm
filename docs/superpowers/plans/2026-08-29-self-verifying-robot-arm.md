@@ -18,7 +18,7 @@
 | macOS build fix | `CFLAGS="-std=gnu17 -Dfdopen=fdopen"` when building pybullet | Bundled zlib does `#define fdopen(fd,mode) NULL`, collides with the macOS SDK `fdopen` declaration; without this the wheel does not build on Apple Silicon |
 | VLM | `gemini-robotics-er-2-preview` via `client.interactions.create` | Embodied-reasoning VLM with vision + function calling + thinking; free tier lets judges run live at zero cost; $2/$10 per MTok paid |
 | Determinism | `generation_config={"seed": 0, "thinking_level": "low"}` | The Interactions API exposes **`seed`, not `temperature`**. README must say so — do not claim "temperature 0" |
-| Eval scale | 10 scenes × 3 seeds = 30 episodes per condition | User decision |
+| Eval scale | 10 scenes x **5 seeds = 50 episodes per condition** (250 across 5 conditions) | Raised from 3 after the user confirmed cost is not a constraint. Tightens per-scene error bars, which is what a Measured Improvement score rests on. |
 | Physics | 5 cm block, `lateral_friction=2.0`, mass 0.08, slow servo; target ≥95% success for a *correct* grasp pose | User decision. Realism is a stated non-goal |
 | Replay cache key | `(scene_id, condition, seed, step_index, call_kind)` — **not** image bytes | Image bytes are not bit-identical across machines; keying on them would break `make judge` on a judge's laptop. Prompt hash is stored alongside and reported as a "replay drift" count |
 
@@ -2934,7 +2934,7 @@ from harness.metrics import write_results
 from harness.scenes import load_scenes
 
 RESULTS = pathlib.Path("results")
-SEEDS = [0, 1, 2]
+SEEDS = [0, 1, 2, 3, 4]
 
 CONDITIONS = {
     "baseline":            None,
