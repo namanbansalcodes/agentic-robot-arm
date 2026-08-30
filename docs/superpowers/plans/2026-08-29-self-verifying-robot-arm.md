@@ -2871,6 +2871,13 @@ def run_episode(scene, seed: int, client, config: VerificationConfig | None,
         trace = run_agent_policy(scene, seed, io, api, client, config, TOOLS, dispatch)
         l3_calls = getattr(trace, "l3_calls", 0)
 
+    # MANDATORY before scoring. `Oracle.is_contained` reads position, not rest state:
+    # a cube still in the gripper, held over the bowl below z=0.07, satisfies the
+    # predicate. Scoring mid-trajectory would credit a success the robot never
+    # completed and inflate the exact number this project exists to measure honestly.
+    # Settling drops anything held and lets the scene come to rest first.
+    world.settle(60)
+
     result = EpisodeResult(
         condition=condition, scene_id=scene.id, seed=seed,
         failure_mode=scene.failure_mode, instruction=scene.instruction,
@@ -2886,6 +2893,13 @@ def run_episode(scene, seed: int, client, config: VerificationConfig | None,
     world.close()
     return result
 ```
+
+> **Scoring invariant — do not remove the `world.settle(60)` above.** Measured in
+> Task 4: a rim-balanced cube sits at z=0.0750 against a 0.0700 cutoff, a 5 mm margin,
+> and a physically-settled cube never lands in the predicate's lenient band (swept
+> drop offsets 0.55r-1.45r, none found). Both guarantees assume the world is AT REST
+> when scored. The oracle is deliberately not allowed to mutate the world, so the
+> settle belongs here, in the harness, at the single point where scoring happens.
 
 - [ ] **Step 5: Implement `harness/run.py`**
 

@@ -1,5 +1,10 @@
 # Every scene the eval ever runs. One file, no code, no hidden knobs.
 # failure_mode names what this scene is DESIGNED to break.
+# TUNING WARNING (measured in Task 4): the containment predicate rejects a cube
+# balanced on a bowl rim by only ~5 mm (rim-perched z=0.0750 vs a 0.0700 cutoff).
+# That margin is a function of bowl_height and cube_half_extent. At half_extent
+# below ~0.020 a rim-perched cube would start counting as a SUCCESS. If you change
+# either default, re-run the boundary sweep in tests/test_oracle.py first.
 defaults:
   table: {length: 1.1, width: 0.7, height: 0.4, x_offset: -0.05}
   cube_half_extent: 0.025
