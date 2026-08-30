@@ -28,6 +28,17 @@ from primitives.imaging import encode_png
 # ask about. Everything not named here is a means, not an end: a move_to has no
 # "did it work" question worth paying a VLM call for, and asking one anyway is the
 # wasteful policy VerificationConfig.verify_every_primitive exists to price.
+def _verify_frame(io, config) -> bytes:
+    """Only rasterise the oblique view when a layer will actually look at it.
+
+    The ablation conditions run with l3=False; rendering a frame nobody reads cost
+    simulator time on every acting step of every episode, which across 250 episodes
+    is minutes of wall clock for nothing.
+    """
+    if not config.l3:
+        return b""
+    return encode_png(io.render("oblique"))
+
 SUBTASK_OF = {"grasp": "grasped", "place": "placed"}
 
 
@@ -41,7 +52,7 @@ def run_agent_policy(scene, seed: int, io, api, client, config, tools,
     redeclared -- a second tool schema that drifted from the first would quietly turn
     the comparison into a comparison of prompts.
     """
-    verifier = Verifier(config, client)
+    verifier = Verifier(config, client, seed=seed)
     memory = EpisodeMemory()
     trace = EpisodeTrace()
 
@@ -107,7 +118,7 @@ def run_agent_policy(scene, seed: int, io, api, client, config, tools,
 
         subtask = SUBTASK_OF.get(name)
         verdict = verifier.check(feedback, subtask=subtask, scene=scene,
-                                 image_png=encode_png(io.render("oblique")),
+                                 image_png=_verify_frame(io, config),
                                  step_index=step_index)
 
         # An informational verdict is already ok=True; recording its reason keeps the

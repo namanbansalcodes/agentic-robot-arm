@@ -157,3 +157,40 @@ def test_verify_every_still_fails_hard_at_a_real_boundary():
     verdict = v.check(_fb(primitive="place", status="ok", fingers_width=0.07),
                       subtask="placed", scene=_Scene(), image_png=b"png", step_index=1)
     assert verdict.ok is False and verdict.layer == "L3" and verdict.informational is False
+
+
+def test_verify_cache_key_uses_the_real_seed():
+    """Regression: the seed used to be read off the scene via getattr(scene,"_seed",0),
+    but SceneSpec is a FROZEN dataclass and never had that attribute -- so every verify
+    call in every episode wrote to the same _s0_ cache key and seeds 1..4 silently
+    overwrote seed 0. That would have corrupted the replay cache invisibly."""
+    import dataclasses
+    from harness.scenes import load_scenes
+
+    scene = load_scenes()[0]
+    assert dataclasses.is_dataclass(scene) and not hasattr(scene, "_seed"), \
+        "SceneSpec must stay frozen and seedless -- the seed is passed explicitly"
+
+    keys = set()
+    for seed in range(5):
+        stub = StubClient()
+        v = Verifier(VerificationConfig(l3=True), stub, seed=seed)
+        v.check(_fb(primitive="place", status="ok", fingers_width=0.07),
+                subtask="placed", scene=_Scene(), image_png=b"png", step_index=1)
+        keys.add(stub.last_call.cache_key())
+    assert len(keys) == 5, f"verify calls collide across seeds: {sorted(keys)}"
+
+
+def test_verify_frame_is_not_rendered_when_l3_is_off():
+    """Ablation runs (l3=False) must not pay simulator time for a frame nobody reads."""
+    from agent.react import _verify_frame
+
+    class _IO:
+        def __init__(self): self.renders = 0
+        def render(self, camera): self.renders += 1; return __import__("numpy").zeros((4, 4, 3), dtype="uint8")
+
+    io_off, io_on = _IO(), _IO()
+    assert _verify_frame(io_off, VerificationConfig(l3=False)) == b""
+    assert io_off.renders == 0
+    assert len(_verify_frame(io_on, VerificationConfig(l3=True))) > 0
+    assert io_on.renders == 1

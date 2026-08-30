@@ -68,9 +68,14 @@ class Verifier:
     separately from the calls the policy spent on planning.
     """
 
-    def __init__(self, config: VerificationConfig, client):
+    def __init__(self, config: VerificationConfig, client, seed: int = 0):
         self.config = config
         self.client = client
+        # The REAL episode seed, passed in. It used to be read off the scene via
+        # getattr(scene, "_seed", 0), but SceneSpec is a frozen dataclass and never
+        # had that attribute -- so every verify call in every episode wrote to the
+        # same _s0_ cache key and seeds 1..4 silently overwrote seed 0's entries.
+        self.seed = seed
         self.l3_calls = 0
 
     def check(self, feedback: Feedback, subtask: Optional[str], scene,
@@ -103,7 +108,7 @@ class Verifier:
             call = VLMCall(
                 scene_id=getattr(scene, "id", "unknown"),
                 condition=self.config.label,
-                seed=getattr(scene, "_seed", 0),
+                seed=self.seed,
                 step_index=step_index,
                 call_kind="verify",
                 system=VERIFIER_SYSTEM,
