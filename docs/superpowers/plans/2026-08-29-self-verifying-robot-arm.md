@@ -106,7 +106,15 @@ BLINDFOLDED = ["agent", "primitives"]
 # and it lives inside robotsim/, which is never scanned.
 FORBIDDEN_MODULES = {"robotsim.oracle", "robotsim.world", "harness"}
 FORBIDDEN_ATTRS = {"sim", "physics_client", "_bowl_centers",
-                   "getBasePositionAndOrientation", "getLinkState", "getContactPoints"}
+                   "getBasePositionAndOrientation", "getLinkState", "getContactPoints",
+                   # `oracle` and `world` are here, not only in FORBIDDEN_MODULES,
+                   # because Python binds a submodule onto its parent package as soon
+                   # as ANYTHING in the process imports it -- and harness/ imports
+                   # robotsim.oracle on every run. So a plain `import robotsim` in
+                   # agent/ followed by `robotsim.oracle.get_object_pose(...)` reaches
+                   # real ground truth, and the module scan cannot see it: the import
+                   # that creates the binding lives in a different file.
+                   "oracle", "world"}
 # Prefix matching, so a ground-truth accessor added upstream by panda-gym is blocked
 # by default rather than by remembering to update this file.
 FORBIDDEN_ATTR_PREFIXES = ("get_base_", "get_link_", "get_joint_")
@@ -116,7 +124,7 @@ def _python_files(package: str):
     return sorted((REPO / package).rglob("*.py"))
 
 
-def _imported_modules(tree: ast.AST):
+def _imported_names(tree: ast.AST):
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -132,7 +140,7 @@ def test_no_ground_truth_imports(package):
     offenders = []
     for path in _python_files(package):
         tree = ast.parse(path.read_text(), filename=str(path))
-        for module in _imported_modules(tree):
+        for module in _imported_names(tree):
             if any(module == f or module.startswith(f + ".") for f in FORBIDDEN_MODULES):
                 offenders.append(f"{path.relative_to(REPO)} imports {module}")
     assert offenders == [], "firewall breach:\n" + "\n".join(offenders)
@@ -217,7 +225,9 @@ clean:
 - [ ] **Step 5: Run the test again**
 
 Run: `.venv/bin/pytest tests/test_firewall.py -v`
-Expected: PASS, 5 tests (two parametrized tests x two packages = 4, plus the non-vacuity guard).
+Expected: PASS. After the quality-review hardening below this is **46 tests** — the
+real scans plus the positive-control corpora. The count is expected to grow, not stay
+fixed; what matters is that the control tests prove the detector still detects.
 
 - [ ] **Step 6: Commit**
 
