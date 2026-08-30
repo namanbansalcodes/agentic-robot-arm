@@ -320,6 +320,11 @@ Two views, deliberately:
   OBLIQUE   a human-legible three-quarter view, used for L3 visual verification and
             for the trajectory pages
 
+NEVER call unproject() on OBLIQUE. Its shallow corner rays are ill-conditioned: a
+frame corner unprojects to x ~ -2.58 m at z=0.025 -- a plausible-looking number,
+silently wrong, with no error raised. Only OVERHEAD is unprojected, and every result
+is still bounds-checked by PrimitiveAPI._in_workspace before the arm moves.
+
 Nothing in this module reads simulator state. It takes a pybullet client and asks it
 to rasterize; the geometry is ours.
 """
@@ -1260,9 +1265,18 @@ class Detection:
 
 
 def _where(cx: float, cy: float, w: int, h: int) -> str:
+    """Describe position IN THE PHOTO, not in world axes.
+
+    The overhead camera uses up=(1,0,0), so the frame is rotated 90 degrees from
+    world axes: image +x is world -y, image +y is world -x. Describing a pixel
+    centroid as "left of the table" would therefore be actively wrong. The VLM is
+    looking at this exact photo, so photo-relative language is both correct and the
+    least confusing thing we can hand it. Anything needing real geometry goes
+    through OVERHEAD.unproject, never through this string.
+    """
     col = "left" if cx < w / 3 else ("right" if cx > 2 * w / 3 else "centre")
-    row = "far" if cy < h / 3 else ("near" if cy > 2 * h / 3 else "middle")
-    return f"{row}-{col} of the table"
+    row = "top" if cy < h / 3 else ("bottom" if cy > 2 * h / 3 else "middle")
+    return f"{row}-{col} of the overhead photo"
 
 
 def detect(rgb: np.ndarray) -> list[Detection]:

@@ -32,7 +32,7 @@ FORBIDDEN_MODULES = {"robotsim.oracle", "robotsim.world", "harness"}
 # being scanned. Only the attribute scan can catch this.
 FORBIDDEN_ATTRS = {"sim", "physics_client", "_bowl_centers", "oracle", "world",
                    "getBasePositionAndOrientation", "getLinkState", "getContactPoints"}
-FORBIDDEN_ATTR_PREFIXES = ("get_base_", "get_link_", "get_joint_")
+FORBIDDEN_ATTR_PREFIXES = ("get_base_", "get_link_", "get_joint_", "physics_client")
 
 # Deliberately shallow. This firewall defends against accidental architectural
 # drift by a cooperating author, not against a saboteur: a determined author can
