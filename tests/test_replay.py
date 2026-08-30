@@ -4,7 +4,7 @@ from agent.llm import CacheMiss, LLMClient, VLMCall, VLMResponse
 
 
 def _call(step=0, kind="plan"):
-    return VLMCall(scene_id="clean_center", condition="agent", seed=0,
+    return VLMCall(scene_id="h1_single", condition="agentic", seed=0,
                    step_index=step, call_kind=kind,
                    system="sys", text="hello", image_png=b"\x89PNG-fake",
                    tools=[{"type": "function", "name": "look"}])

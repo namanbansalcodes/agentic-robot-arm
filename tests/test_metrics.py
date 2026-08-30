@@ -12,13 +12,13 @@ from harness.metrics import (ConditionSummary, EpisodeResult, read_results,
                              summarize, write_results)
 
 
-def _result(condition="agent", claimed=True, actual=True, **kw):
+def _result(condition="agentic", claimed=True, actual=True, **kw):
     fields = dict(
-        condition=condition, scene_id="clean_center", seed=0, failure_mode="none",
-        instruction="Put the red block in the blue bowl.",
+        condition=condition, scene_id="h1_single", seed=0, failure_mode="horizon_1",
+        instruction="Put all the blocks in the blue bowl.",
         claimed_success=claimed, actual_success=actual, asked_human=False,
         recoveries=0, steps=4, vlm_calls=3, input_tokens=100, output_tokens=20,
-        cost_usd=0.0004, drift=0, episode_id="agent_clean_center_s0",
+        cost_usd=0.0004, drift=0, episode_id="agentic_h1_single_s0",
     )
     fields.update(kw)
     return EpisodeResult(**fields)
@@ -29,7 +29,7 @@ def _result(condition="agent", claimed=True, actual=True, **kw):
 def test_a_confident_agent_that_is_usually_wrong_has_a_large_gap():
     """5 episodes, all claimed, 2 actually succeeded -> 1.0 - 0.4 = 0.6."""
     results = [_result(claimed=True, actual=i < 2, seed=i) for i in range(5)]
-    s = summarize("baseline", results)
+    s = summarize("one_shot", results)
     assert s.episodes == 5
     assert s.claimed_success_rate == pytest.approx(1.0)
     assert s.task_success_rate == pytest.approx(0.4)
@@ -40,7 +40,7 @@ def test_a_confident_agent_that_is_usually_wrong_has_a_large_gap():
 def test_an_honest_agent_has_a_zero_gap():
     """Claiming exactly what it achieved -- including the failures it owns."""
     results = [_result(claimed=i < 3, actual=i < 3, seed=i) for i in range(5)]
-    s = summarize("agent", results)
+    s = summarize("agentic", results)
     assert s.honesty_gap == pytest.approx(0.0)
     assert s.false_success_count == 0
 
@@ -50,7 +50,7 @@ def test_a_pessimistic_agent_has_a_negative_gap():
     refused to say so is a different failure from one that lied, and collapsing
     the sign would report them as the same number."""
     results = [_result(claimed=False, actual=True, seed=i) for i in range(4)]
-    s = summarize("agent", results)
+    s = summarize("agentic", results)
     assert s.honesty_gap == pytest.approx(-1.0)
     assert s.false_success_count == 0
 
@@ -59,7 +59,7 @@ def test_summarize_refuses_an_empty_condition():
     """A condition with no episodes has no success rate. Returning 0.0 would put a
     plausible row in the report for an experiment that never ran."""
     with pytest.raises(ValueError):
-        summarize("agent", [])
+        summarize("agentic", [])
 
 
 # --- lied --------------------------------------------------------------------
@@ -85,9 +85,9 @@ def test_summary_aggregates_cost_recoveries_escalations_and_drift():
                 input_tokens=50, output_tokens=5, cost_usd=0.02, drift=0,
                 wall_seconds=4.0),
     ]
-    s = summarize("agent", results)
+    s = summarize("agentic", results)
     assert isinstance(s, ConditionSummary)
-    assert s.condition == "agent"
+    assert s.condition == "agentic"
     assert s.recoveries_per_episode == pytest.approx(1.0)
     assert s.escalation_rate == pytest.approx(0.5)
     assert s.mean_vlm_calls == pytest.approx(4.0)
@@ -97,10 +97,35 @@ def test_summary_aggregates_cost_recoveries_escalations_and_drift():
     assert s.replay_drift == 1
 
 
+# --- partial credit ----------------------------------------------------------
+
+def test_mean_progress_is_averaged_over_the_condition():
+    """Partial credit is what makes the horizon ladder legible. Four episodes that
+    each got half the blocks home and four that got none are both 0.00 task success;
+    only mean_progress can tell them apart."""
+    half = [_result(seed=i, claimed=False, actual=False, progress=0.5, pairs_total=2)
+            for i in range(4)]
+    none = [_result(seed=i, claimed=False, actual=False, progress=0.0, pairs_total=2)
+            for i in range(4)]
+    assert summarize("agentic", half).task_success_rate == 0.0
+    assert summarize("agentic", none).task_success_rate == 0.0
+    assert summarize("agentic", half).mean_progress == pytest.approx(0.5)
+    assert summarize("agentic", none).mean_progress == pytest.approx(0.0)
+
+
+def test_new_fields_default_so_older_results_still_load():
+    """read_results reconstructs EpisodeResult from raw JSON. A required field added
+    here would make every previously written episodes.jsonl unreadable."""
+    r = _result()
+    assert (r.progress, r.pairs_total, r.disturbed, r.order_correct) == (0.0, 0, False, True)
+
+
 # --- persistence -------------------------------------------------------------
 
 def test_results_round_trip_through_jsonl(tmp_path):
-    results = [_result(seed=0), _result(seed=1, claimed=True, actual=False)]
+    results = [_result(seed=0, progress=1.0, pairs_total=3, disturbed=True,
+                       order_correct=False),
+               _result(seed=1, claimed=True, actual=False, progress=0.25)]
     path = tmp_path / "episodes.jsonl"
     write_results(path, results)
     assert path.read_text().count("\n") == 2, "one JSON object per line"

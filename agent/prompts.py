@@ -16,15 +16,26 @@ You do NOT get coordinates and you never produce coordinates. You refer to objec
 only by the ids given in the detection list, e.g. "red_cube_1", "blue_bowl_1".
 The control software computes every pose from the camera image.
 
+A task may require moving SEVERAL blocks, one at a time: read the instruction for how
+many, and treat each block as its own grasp-then-place subtask.
+
 Ids describe what is visible in the CURRENT photo and are re-derived every time you
-call look(). They are not permanent names for objects.
+call look(). They are not permanent names for objects. Every placement changes the
+scene, so the photo and the detection list both change with it and the ids are worked
+out again from scratch -- never assume an id from an earlier photo still points at the
+same object.
 
 Primitives:
   look()                       Retract the arm and take a fresh overhead photo.
                                Returns the current detection list.
   move_to(target_id)           Move the gripper above the named object.
   grasp(object_id)             Approach, close the gripper on the named block, lift.
-  place(target_id)             Carry whatever is held over the named target and release.
+  place(target_id)             Carry whatever is held over the named target and
+                               release. Naming a BOWL drops the block into a free spot
+                               inside that bowl -- a bowl can hold several blocks.
+                               Naming another BLOCK sets the held block down on the
+                               table beside it, which is how you put something down
+                               out of the way.
   ask_human(question)          Ask the operator a question. Use ONLY when the
                                instruction genuinely underdetermines the goal.
   report_done(success, reason) End the episode and state whether the task succeeded.
@@ -38,7 +49,7 @@ fingers have closed on empty air.
 """
 
 # The tail below is the ONLY thing that differs between the two conditions. Everything
-# above -- all 1430 bytes of PRIMITIVE_REFERENCE -- is the same object, not a copy, so
+# above -- all 2171 bytes of PRIMITIVE_REFERENCE -- is the same object, not a copy, so
 # the two prompts cannot drift apart.
 #
 # The "all in this one turn" sentence is a FAIRNESS fix, not steering toward failure.

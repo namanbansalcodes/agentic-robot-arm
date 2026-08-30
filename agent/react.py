@@ -43,7 +43,7 @@ SUBTASK_OF = {"grasp": "grasped", "place": "placed"}
 
 
 def run_agent_policy(scene, seed: int, io, api, client, config, tools,
-                     dispatch) -> EpisodeTrace:
+                     dispatch, on_step=None) -> EpisodeTrace:
     """Run one closed-loop episode and return its trace.
 
     `io`, `api`, `client`, `tools` and `dispatch` are injected for the same reason as
@@ -51,7 +51,15 @@ def run_agent_policy(scene, seed: int, io, api, client, config, tools,
     `tools` and `dispatch` are the baseline's own objects, passed in rather than
     redeclared -- a second tool schema that drifted from the first would quietly turn
     the comparison into a comparison of prompts.
+
+    `on_step` is a zero-argument callback the HARNESS may pass, invoked after every
+    primitive this loop executes. It is opaque here on purpose: the harness uses it to
+    perturb the world mid-episode, and this policy must remain unable to tell that
+    anything happened except by looking. It takes no arguments and returns nothing, so
+    there is no channel through it back into the loop. Default None is a no-op, so
+    every existing behaviour is unchanged when the harness passes nothing.
     """
+    notify = on_step or (lambda: None)
     verifier = Verifier(config, client, seed=seed)
     memory = EpisodeMemory()
     trace = EpisodeTrace()
@@ -60,6 +68,7 @@ def run_agent_policy(scene, seed: int, io, api, client, config, tools,
     # looked has no ids to name, so making it spend a decision step on the first photo
     # would hand the baseline a step it does not have to pay for either.
     feedback = api.look()
+    notify()
     trace.steps.append({"primitive": "look", "args": {}, "reasoning": "",
                         "feedback": feedback.to_dict(), "verdict": None})
     memory.record("look", {}, "ok")
@@ -97,6 +106,7 @@ def run_agent_policy(scene, seed: int, io, api, client, config, tools,
             # Execute it anyway: report_done takes a frame, so the claim lands in the
             # transcript next to the photo it was made about.
             feedback = api.report_done(trace.claimed_success, trace.claim_reason)
+            notify()
             trace.steps.append({"primitive": name, "args": args,
                                 "reasoning": response.text,
                                 "feedback": feedback.to_dict(), "verdict": None})
@@ -107,6 +117,7 @@ def run_agent_policy(scene, seed: int, io, api, client, config, tools,
 
         try:
             feedback = dispatch(api, name, args)
+            notify()
         except KeyError:
             # A hallucinated tool name ends one step, not the episode. Crashing here
             # would score a model typo as a harness failure, and silently skipping it

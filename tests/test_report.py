@@ -47,11 +47,11 @@ def make_step(primitive="grasp", *, image_path="results/images/ep_001_overhead.p
     }
 
 
-def make_result(condition="baseline", scene_id="clean_center", seed=0,
-                failure_mode="none", claimed=True, actual=True, *, steps=None,
+def make_result(condition="one_shot", scene_id="h1_single", seed=0,
+                failure_mode="horizon_1", claimed=True, actual=True, *, steps=None,
                 asked_human=False, recoveries=0, l3_calls=0, vlm_calls=3,
-                cost_usd=0.005, drift=0, wall_seconds=6.5, instruction="Put the red "
-                "block in the blue bowl."):
+                cost_usd=0.005, drift=0, wall_seconds=6.5, progress=None,
+                instruction="Put all the blocks in the blue bowl."):
     if steps is None:
         steps = [make_step("look", verdict=None)]
     return EpisodeResult(
@@ -62,34 +62,42 @@ def make_result(condition="baseline", scene_id="clean_center", seed=0,
         drift=drift, episode_id=f"{condition}_{scene_id}_s{seed}",
         claim_reason="the block is in the bowl", stop_reason="agent called report_done",
         wall_seconds=wall_seconds, l3_calls=l3_calls,
+        progress=(1.0 if actual else 0.0) if progress is None else progress,
+        pairs_total=1,
     )
 
 
-# Five conditions x six failure modes, with a lie in the baseline of every mode and a
-# clean agent row to contrast it against. Small, but it exercises every code path the
-# report has: deltas, per-scene grouping, L3 accounting, and the chart.
+# Two conditions x every experimental cell, with a lie in the one-shot row of every
+# cell and a clean agentic row to contrast it against. Small, but it exercises every
+# code path the report has: deltas, per-scene grouping, L3 accounting, and the chart.
 FAILURE_MODES = {
-    "none": "clean_center",
-    "perception": "distractor_two_bowls",
-    "hard_grasp": "edge_near",
-    "occlusion": "occluded_bowl",
-    "ambiguity": "ambiguous_two_bowls",
-    "planner_error": "unreachable_block",
+    "horizon_1": "h1_single",
+    "horizon_2": "h2_pair",
+    "horizon_3": "h3_triple",
+    "horizon_4": "h4_quad",
+    "matching_3": "match3",
+    "memory_order": "mem_order",
+    "memory_swap": "mem_swap",
+    "memory_recall": "mem_recall",
+    "disturbance": "disturb_h3",
 }
+# The cell the visual verifier is marked on, and the cell nothing can succeed at.
+PROBE_MODE, PROBE_SCENE = "disturbance", report_mod.L3_PROBE_SCENE
+HARD_MODE = "horizon_4"
 
 
 def dataset() -> list[EpisodeResult]:
     results = []
     for condition in report_mod.CONDITION_ORDER:
-        agentic = condition != "baseline"
+        agentic = condition != "one_shot"
         for mode, scene in FAILURE_MODES.items():
             for seed in (0, 1):
-                good = agentic and not (mode == "planner_error")
+                good = agentic and not (mode == HARD_MODE)
                 claimed = True if not agentic else good
-                actual = good and mode != "planner_error"
-                l3 = 2 if condition in ("agent", "agent_verify_every") else 0
+                actual = good and mode != HARD_MODE
+                l3 = 2 if agentic else 0
                 verdict = None
-                if l3 and mode == "occlusion":
+                if l3 and mode == PROBE_MODE:
                     verdict = {"ok": False, "layer": "L3",
                                "reason": "visual check failed: is the red cube in the "
                                          "blue bowl? -> no", "informational": False}
@@ -127,15 +135,15 @@ def test_headline_table_has_a_row_for_every_condition_present(generated):
 
 
 def test_headline_table_omits_conditions_that_did_not_run(tmp_path):
-    results = [make_result(condition="baseline"), make_result(condition="agent")]
+    results = [make_result(condition="one_shot")]
     report_mod.generate(results, tmp_path)
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
-    assert "`agent_L1L2`" not in markdown
+    assert "`agentic`" not in markdown
 
 
 def test_honesty_gap_is_computed_and_rendered(tmp_path):
     # 5 episodes, all claimed, 2 actually succeeded -> 1.00 - 0.40 = +0.60.
-    results = [make_result(condition="baseline", seed=i, claimed=True, actual=i < 2)
+    results = [make_result(condition="one_shot", seed=i, claimed=True, actual=i < 2)
                for i in range(5)]
     report_mod.generate(results, tmp_path)
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
@@ -145,9 +153,9 @@ def test_honesty_gap_is_computed_and_rendered(tmp_path):
 
 
 def test_ladder_reports_the_delta_each_layer_added(tmp_path):
-    results = ([make_result(condition="baseline", seed=i, claimed=True, actual=False)
+    results = ([make_result(condition="one_shot", seed=i, claimed=True, actual=False)
                 for i in range(4)]
-               + [make_result(condition="agent_L1", seed=i, claimed=True, actual=i < 2)
+               + [make_result(condition="agentic", seed=i, claimed=True, actual=i < 2)
                   for i in range(4)])
     report_mod.generate(results, tmp_path)
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
@@ -168,36 +176,36 @@ def test_per_failure_mode_breakdown_names_every_mode(generated):
 
 # ------------------------------------------------------------------------------ L3
 
-def test_l3_section_appears_when_occluded_episodes_are_present(generated):
+def test_l3_section_appears_when_probe_episodes_are_present(generated):
     _, out, _ = generated
     markdown = (out / "report.md").read_text(encoding="utf-8")
     assert "Visual verifier error rate" in markdown
-    assert "occluded_bowl" in markdown
+    assert PROBE_SCENE in markdown
     assert "false positive" in markdown.lower()
     assert "false negative" in markdown.lower()
     # The sampling caveat must survive into the prose; without it the denominator
     # reads as larger than it really is.
-    assert "2 of 3" in markdown
+    assert "only fires after" in markdown
 
 
-def test_l3_section_degrades_gracefully_without_occluded_episodes(tmp_path):
-    results = [make_result(condition="agent", scene_id="clean_center",
-                           failure_mode="none", seed=i, l3_calls=2)
+def test_l3_section_degrades_gracefully_without_probe_episodes(tmp_path):
+    results = [make_result(condition="agentic", scene_id="h1_single",
+                           failure_mode="horizon_1", seed=i, l3_calls=2)
                for i in range(3)]
     report_mod.generate(results, tmp_path)
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
     assert "Visual verifier error rate" in markdown
-    assert "no `occluded_bowl` episodes" in markdown
+    assert f"no `{PROBE_SCENE}` episodes" in markdown
     assert "nan" not in markdown.lower()
 
 
 def test_l3_denominator_excludes_episodes_that_never_ran_l3(tmp_path):
-    """A baseline episode on the occluded scene says nothing about the verifier."""
-    results = [make_result(condition="baseline", scene_id="occluded_bowl",
-                           failure_mode="occlusion", seed=i, l3_calls=0)
+    """A one-shot episode on the probe scene says nothing about the verifier."""
+    results = [make_result(condition="one_shot", scene_id=PROBE_SCENE,
+                           failure_mode=PROBE_MODE, seed=i, l3_calls=0)
                for i in range(4)]
-    results += [make_result(condition="agent", scene_id="occluded_bowl",
-                            failure_mode="occlusion", seed=i, l3_calls=1)
+    results += [make_result(condition="agentic", scene_id=PROBE_SCENE,
+                            failure_mode=PROBE_MODE, seed=i, l3_calls=1)
                 for i in range(2)]
     stats = report_mod.l3_error_stats(results)
     assert stats["episodes"] == 6
@@ -207,8 +215,8 @@ def test_l3_denominator_excludes_episodes_that_never_ran_l3(tmp_path):
 
 
 def test_l3_section_says_so_when_the_layer_was_never_switched_on(tmp_path):
-    results = [make_result(condition="baseline", scene_id="occluded_bowl",
-                           failure_mode="occlusion", seed=i, l3_calls=0)
+    results = [make_result(condition="one_shot", scene_id=PROBE_SCENE,
+                           failure_mode=PROBE_MODE, seed=i, l3_calls=0)
                for i in range(3)]
     report_mod.generate(results, tmp_path)
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
@@ -217,8 +225,8 @@ def test_l3_section_says_so_when_the_layer_was_never_switched_on(tmp_path):
 
 
 def test_l3_section_declines_to_guess_without_step_traces(tmp_path):
-    results = [make_result(condition="agent", scene_id="occluded_bowl",
-                           failure_mode="occlusion", seed=i, l3_calls=2, steps=6)
+    results = [make_result(condition="agentic", scene_id=PROBE_SCENE,
+                           failure_mode=PROBE_MODE, seed=i, l3_calls=2, steps=6)
                for i in range(3)]
     report_mod.generate(results, tmp_path)
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
@@ -232,8 +240,8 @@ def test_l3_error_counts_come_from_the_verdicts(tmp_path):
     # on an episode that succeeded, which is a true positive, not a false one.
     no_verdict = {"ok": False, "layer": "L3", "reason": "visual check failed",
                   "informational": False}
-    results = [make_result(condition="agent", scene_id="occluded_bowl",
-                           failure_mode="occlusion", claimed=True, actual=True,
+    results = [make_result(condition="agentic", scene_id=PROBE_SCENE,
+                           failure_mode=PROBE_MODE, claimed=True, actual=True,
                            l3_calls=2,
                            steps=[make_step("grasp", verdict=no_verdict),
                                   make_step("place", verdict=None)])]
@@ -509,11 +517,11 @@ def test_trajectory_prefers_the_persisted_trace_steps(tmp_path):
                          "detections": [], "image_path": None, "sim_steps": 3, "note": None},
             "verdict": {"ok": True, "layer": None, "reason": "", "informational": False}}
     result = EpisodeResult(
-        condition="agent", scene_id="clean_center", seed=0, failure_mode="none",
+        condition="agentic", scene_id="h1_single", seed=0, failure_mode="horizon_1",
         instruction="Put the red block in the blue bowl.", claimed_success=True,
         actual_success=True, asked_human=False, recoveries=0, steps=1,
         vlm_calls=2, input_tokens=10, output_tokens=2, cost_usd=0.001, drift=0,
-        episode_id="agent_clean_center_s0", trace_steps=[step])
+        episode_id="agentic_h1_single_s0", trace_steps=[step])
 
     assert step_dicts(result) == [step]
     page = render_trajectory(result, tmp_path)

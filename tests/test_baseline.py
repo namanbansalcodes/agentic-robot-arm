@@ -2,12 +2,10 @@ import numpy as np
 
 from agent.baseline import TOOLS, dispatch, plan_once
 from agent.llm import VLMResponse
-from harness.scenes import load_scenes
 from primitives.api import PrimitiveAPI
 from robotsim.io import RobotIO
 from robotsim.world import World
-
-SCENES = {s.id: s for s in load_scenes()}
+from tests import SCENES, scene_with_unreachable
 
 
 class StubClient:
@@ -31,18 +29,19 @@ def _resp(tool_calls):
                        output_tokens=5, model="stub")
 
 
-def _run(scene_id, tool_calls, tmp_path):
-    world = World(SCENES[scene_id], seed=0)
+def _run(scene, tool_calls, tmp_path):
+    scene = SCENES[scene] if isinstance(scene, str) else scene
+    world = World(scene, seed=0)
     io = RobotIO(world)
     api = PrimitiveAPI(io, image_dir=tmp_path)
     client = StubClient([_resp(tool_calls)])
-    trace = plan_once(SCENES[scene_id], 0, io, api, client, TOOLS, dispatch)
+    trace = plan_once(scene, 0, io, api, client, TOOLS, dispatch)
     world.close()
     return trace, client
 
 
 def test_baseline_makes_exactly_one_planning_call(tmp_path):
-    trace, client = _run("clean_center", [
+    trace, client = _run("h1_single", [
         {"name": "grasp", "args": {"object_id": "red_cube_1"}},
         {"name": "place", "args": {"target_id": "blue_bowl_1"}},
     ], tmp_path)
@@ -53,7 +52,7 @@ def test_baseline_makes_exactly_one_planning_call(tmp_path):
 
 def test_baseline_still_claims_success_after_a_failing_step(tmp_path):
     """The behaviour this whole project exists to measure. Do not 'fix' it."""
-    trace, _ = _run("clean_center", [
+    trace, _ = _run("h1_single", [
         {"name": "grasp", "args": {"object_id": "nonexistent_1"}},
         {"name": "place", "args": {"target_id": "blue_bowl_1"}},
     ], tmp_path)
@@ -63,7 +62,7 @@ def test_baseline_still_claims_success_after_a_failing_step(tmp_path):
 
 def test_baseline_never_reads_feedback_between_steps(tmp_path):
     """Blind execution: an unreachable grasp does not stop the rest of the plan."""
-    trace, _ = _run("unreachable_block", [
+    trace, _ = _run(scene_with_unreachable(SCENES["h1_single"], "red_cube"), [
         {"name": "grasp", "args": {"object_id": "red_cube_1"}},
         {"name": "place", "args": {"target_id": "blue_bowl_1"}},
     ], tmp_path)
@@ -73,7 +72,7 @@ def test_baseline_never_reads_feedback_between_steps(tmp_path):
 
 
 def test_baseline_honours_its_own_report_done(tmp_path):
-    trace, _ = _run("clean_center", [
+    trace, _ = _run("h1_single", [
         {"name": "report_done", "args": {"success": False, "reason": "gave up"}},
     ], tmp_path)
     assert trace.claimed_success is False
@@ -91,7 +90,26 @@ def test_tool_schema_exposes_no_coordinates_and_no_offset(tmp_path):
 
 
 def test_both_conditions_share_one_preamble():
+    """One object, not two copies. That shared string IS the fairness guarantee: two
+    identical copies would drift apart under later editing and take the result with
+    them."""
+    from agent import prompts
     from agent.prompts import AGENT_SYSTEM, BASELINE_SYSTEM, PRIMITIVE_REFERENCE
     assert PRIMITIVE_REFERENCE in BASELINE_SYSTEM
     assert PRIMITIVE_REFERENCE in AGENT_SYSTEM
     assert len(PRIMITIVE_REFERENCE) > 400
+    assert BASELINE_SYSTEM.count(PRIMITIVE_REFERENCE) == 1
+    assert AGENT_SYSTEM.count(PRIMITIVE_REFERENCE) == 1
+    # Both preambles are the same object, so a copy cannot be substituted for one.
+    assert prompts.BASELINE_SYSTEM.startswith(prompts.PRIMITIVE_REFERENCE)
+    assert prompts.AGENT_SYSTEM.startswith(prompts.PRIMITIVE_REFERENCE)
+
+
+def test_the_shared_preamble_describes_the_long_horizon_task():
+    """The task changed; the preamble has to say so, once, for both conditions."""
+    from agent.prompts import PRIMITIVE_REFERENCE
+    text = PRIMITIVE_REFERENCE.lower()
+    assert "several blocks" in text, "the model must know a task can need many blocks"
+    assert "re-derived" in text, "ids change after every placement"
+    assert "beside" in text, "place(block) puts it down beside, not on top"
+    assert "disturb" not in text, "discovering the disturbance is the experiment"

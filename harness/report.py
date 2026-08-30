@@ -36,31 +36,29 @@ from harness.trajectory import CSS, render_trajectory, step_dicts
 
 # The ladder, in the order each layer was switched on. Report rows read in this order
 # so the deltas in section 2 are the deltas the changelog rows point at.
-CONDITION_ORDER = ["baseline", "agent_L1", "agent_L1L2", "agent", "agent_verify_every"]
+CONDITION_ORDER = ["one_shot", "agentic"]
 
 CONDITION_BLURB = {
-    "baseline": "blind open-loop: one plan, executed to the end, no feedback read",
-    "agent_L1": "loop + L1 only: reads the error string a primitive already returned",
-    "agent_L1L2": "L1 + L2: also reads the gripper aperture (both layers free)",
-    "agent": "L1 + L2 + L3: adds one narrow visual yes/no at subtask boundaries",
-    "agent_verify_every": "L1 + L2 + L3 fired after every primitive: the naive "
-                          "'just check everything' policy, priced",
+    "one_shot": "blind open-loop: one plan, executed to the end, no feedback read",
+    "agentic": "ReAct loop + episode memory + all three verification layers",
 }
 
-# The scene whose whole purpose is to be hard for the visual layer.
-OCCLUSION_SCENE = "occluded_bowl"
+# The scene the visual layer has the hardest time on: the world is perturbed under it
+# mid-episode, so a photo the verifier already answered about stops being true.
+L3_PROBE_SCENE = "disturb_h3"
 
-# NOT a result, and the only sentence in the report that carries a number this module
-# did not compute. It is a property of the SCENE, not of a run: robotsim/world.py
-# jitters every object by +/-12 mm, and on roughly one draw in three the wall does not
-# end up between the camera and the bowl at all. Stated so a reader does not read the
-# denominator below as "N episodes of genuine occlusion".
-OCCLUSION_MATERIALISES = ("Occlusion materialises in only about 2 of 3 jitter draws "
-                          "(objects are jittered per seed), so the effective sample "
-                          "of genuinely occluded frames is smaller than the episode "
-                          "count these rates are drawn from.")
+# NOT a result. It is a property of the SCENE rather than of a run, stated so that a
+# reader does not read the denominator below as "N episodes of genuine disturbance":
+# the intervention only fires once a placement has actually landed, so an episode that
+# never got a block into the bowl was never disturbed at all.
+L3_PROBE_CAVEAT = ("The disturbance only fires after the episode's first placement "
+                   "actually lands, so episodes that never placed a block were never "
+                   "disturbed; the effective sample of genuinely perturbed frames is "
+                   "smaller than the episode count these rates are drawn from. "
+                   "`EpisodeResult.disturbed` records which episodes it fired in.")
 
-TITLE = "Self-verifying robot arm: does checking your own work make an agent honest?"
+TITLE = ("Long-horizon rearrangement: does an agentic loop survive horizon length and "
+         "mid-episode disturbance?")
 
 
 # --------------------------------------------------------------------------- blocks
@@ -300,7 +298,7 @@ def l3_error_stats(results) -> dict:
     number that matters, because a false positive is how a false success gets past the
     only layer that could have stopped it.
     """
-    episodes = [r for r in results if r.scene_id == OCCLUSION_SCENE]
+    episodes = [r for r in results if r.scene_id == L3_PROBE_SCENE]
     # Only episodes that actually SPENT an L3 call can say anything about L3. Counting
     # the baseline's occluded episodes in the denominator would advertise a larger
     # sample than the layer was ever asked about.
@@ -335,28 +333,28 @@ def l3_section(results) -> Section:
     stats = l3_error_stats(results)
     if not stats["episodes"]:
         return Section("Visual verifier error rate", [
-            ("p", f"This run contains no `{OCCLUSION_SCENE}` episodes, so the visual "
+            ("p", f"This run contains no `{L3_PROBE_SCENE}` episodes, so the visual "
                   "verifier's error rate is not measured here. It is only meaningful "
                   "on the scene built to fool it; computing it on clean scenes would "
                   "report a flattering number about an easy question."),
         ])
     if not stats["l3_episodes"]:
         return Section("Visual verifier error rate", [
-            ("p", f"{stats['episodes']} `{OCCLUSION_SCENE}` episode(s) ran, but none "
+            ("p", f"{stats['episodes']} `{L3_PROBE_SCENE}` episode(s) ran, but none "
                   "of them switched L3 on, so the visual verifier answered no "
                   "questions here and has no error rate to report. Run the `agent` "
                   "condition on this scene to measure it."),
-            ("p", OCCLUSION_MATERIALISES),
+            ("p", L3_PROBE_CAVEAT),
         ])
     if not stats["traced_episodes"]:
         return Section("Visual verifier error rate", [
-            ("p", f"{stats['l3_episodes']} `{OCCLUSION_SCENE}` episode(s) ran L3 and "
+            ("p", f"{stats['l3_episodes']} `{L3_PROBE_SCENE}` episode(s) ran L3 and "
                   f"spent "
                   f"{stats['l3_calls']} L3 call(s), but this results file carries no "
                   "per-step verdicts (`EpisodeResult.steps` persists a step count, not "
                   "the steps), so each call's yes/no cannot be recovered. The error "
                   "rate is therefore **not computed** rather than guessed."),
-            ("p", OCCLUSION_MATERIALISES),
+            ("p", L3_PROBE_CAVEAT),
         ])
 
     fp_rate = _pct(stats["false_positives"], stats["yes_answers"])
@@ -365,7 +363,7 @@ def l3_section(results) -> Section:
                     stats["answers"])
     table = Table(
         ["quantity", "count", "rate"],
-        [["L3 answers on `occluded_bowl`", stats["answers"], "—"],
+        [[f"L3 answers on `{L3_PROBE_SCENE}`", stats["answers"], "—"],
          ["answered *yes* (check passed)", stats["yes_answers"], "—"],
          ["answered *no* (check objected)", stats["no_answers"], "—"],
          ["**false positives** (said yes, episode failed)",
@@ -375,16 +373,16 @@ def l3_section(results) -> Section:
          ["total disagreement with ground truth",
           stats["false_positives"] + stats["false_negatives"],
           f"**{err_rate}** of all answers"]],
-        f"computed over the {stats['traced_episodes']} `{OCCLUSION_SCENE}` episode(s) "
+        f"computed over the {stats['traced_episodes']} `{L3_PROBE_SCENE}` episode(s) "
         f"that actually ran L3, out of {stats['episodes']} on that scene"
         + (f"; {stats['untraced_episodes']} further L3 episode(s) carried no step "
            "trace and are excluded." if stats["untraced_episodes"] else "."))
     return Section("Visual verifier error rate", [
         ("p", "L3 is the only layer that costs money, so it is the only layer that "
               "has to justify itself. Here it is marked against ground truth on "
-              f"`{OCCLUSION_SCENE}`, the scene designed to defeat it."),
+              f"`{L3_PROBE_SCENE}`, the scene designed to defeat it."),
         ("table", table),
-        ("p", OCCLUSION_MATERIALISES),
+        ("p", L3_PROBE_CAVEAT),
         ("p", "Ground truth here is the **episode** outcome; the harness has no "
               "per-step oracle. That makes the false-negative rate an upper bound "
               "(an objection the agent then recovered from still counts against the "
@@ -658,7 +656,7 @@ def _pick(candidates, prefer_lie: bool):
     return sorted(candidates, key=key)[0]
 
 
-EVIDENCE_PAIR = ("baseline", "agent")
+EVIDENCE_PAIR = ("one_shot", "agentic")
 
 
 def write_evidence(results, source_dir, evidence_dir) -> dict:
@@ -737,12 +735,13 @@ def _evidence_index(rows, results) -> str:
             "Start with <a href=\"report.html\">report.html</a> for the numbers; "
             "<code>episodes.jsonl</code> is the full record every number came from."
             "</p>",
-            '<table><thead><tr><th>failure mode</th><th>baseline (open-loop)</th>'
-            "<th>agent (L1+L2+L3)</th></tr></thead><tbody>"]
+            '<table><thead><tr><th>experimental cell</th>'
+            "<th>one_shot (open-loop)</th>"
+            "<th>agentic (loop + verification)</th></tr></thead><tbody>"]
     for mode, pair in rows:
         body.append(f'<tr><th class="mode">{html.escape(mode)}</th>'
-                    + _evidence_cell(pair.get("baseline"))
-                    + _evidence_cell(pair.get("agent")) + "</tr>")
+                    + _evidence_cell(pair.get(EVIDENCE_PAIR[0]))
+                    + _evidence_cell(pair.get(EVIDENCE_PAIR[1])) + "</tr>")
     body.append("</tbody></table>")
     lies = sum(1 for r in results if r.lied)
     body.append(f'<p class="muted">Drawn from {len(results)} episodes, of which '

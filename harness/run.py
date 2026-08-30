@@ -22,22 +22,24 @@ SEEDS = [0, 1, 2, 3, 4]
 # The KEY is the condition name: it is what the report rows say and what run_episode
 # stamps on every EpisodeResult.
 #
-# KNOWN, DELIBERATE MISMATCH, documented rather than hidden: agent/react.py and
-# agent/verify.py build VLMCall.condition from `config.label`, not from this key. For
-# four of the five rows the two agree; for "agent" they do not -- its label is
-# "agent_L1L2L3", so its cache files are named ..._agent_L1L2L3_s0_001_plan.json while
-# the report row reads "agent". That is a legibility wart, not a correctness bug: the
-# label is a pure function of the config, so the same key is produced on the recording
-# run and the replay run, and all five labels are distinct ("baseline", "agent_L1",
-# "agent_L1L2", "agent_L1L2L3", "agent_verify_every") so no two conditions can collide
-# in the cache. Renaming the key to "agent_L1L2L3" would fix the wart, and closing it
-# from the other side would mean editing agent/, which is out of scope here.
+# TWO conditions, and only two. The L1/L2/L3 ablation ladder is gone: this experiment
+# varies HORIZON LENGTH and DISTURBANCE, and a five-row condition axis crossed with a
+# ten-scene design would have priced three ablations nobody is asking about while
+# quintupling the cost of the two rows that carry the finding. agent/verify.py keeps
+# all three layers and all of its tests -- the layers are still there, they are simply
+# not exposed as separate conditions any more.
+#
+# KNOWN, DELIBERATE MISMATCH, documented rather than hidden: agent/react.py builds
+# VLMCall.condition from `config.label` ("agent_L1L2L3") and agent/baseline.py hard-codes
+# "baseline", so the cache files for these two rows are named ..._baseline_s0_... and
+# ..._agent_L1L2L3_s0_... while the report rows read `one_shot` and `agentic`. That is a
+# legibility wart, not a correctness bug: each name is a pure function of the condition,
+# so the same key is produced on the recording run and on the replay run, and the two are
+# distinct, so no two conditions can collide in the cache. Closing it would mean editing
+# agent/ label strings, which buys nothing measurable.
 CONDITIONS = {
-    "baseline":           None,
-    "agent_L1":           VerificationConfig(l1=True,  l2=False, l3=False),
-    "agent_L1L2":         VerificationConfig(l1=True,  l2=True,  l3=False),
-    "agent":              VerificationConfig(l1=True,  l2=True,  l3=True),
-    "agent_verify_every": VerificationConfig(l1=True, l2=True, l3=True, verify_every_primitive=True),
+    "one_shot": None,                       # plan once, execute blind
+    "agentic":  VerificationConfig(),       # ReAct loop + memory, all layers on
 }
 
 
@@ -115,6 +117,8 @@ def main(argv=None) -> int:
                 print(f"{flag} {result.condition:<18} {result.scene_id:<22} s{result.seed} "
                       f"claimed={str(result.claimed_success):<5} "
                       f"actual={str(result.actual_success):<5} "
+                      f"progress={result.progress:.2f} "
+                      f"disturbed={str(result.disturbed):<5} "
                       f"steps={result.steps:<3} ${result.cost_usd:.4f}", flush=True)
 
     path = write_results(out_dir / "episodes.jsonl", results)

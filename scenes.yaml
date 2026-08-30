@@ -1,5 +1,20 @@
 # Every scene the eval ever runs. One file, no code, no hidden knobs.
-# failure_mode names what this scene is DESIGNED to break.
+# failure_mode names the EXPERIMENTAL CELL this scene occupies, not a bug to provoke.
+#
+# GROUNDING. The task family is open-vocabulary long-horizon tabletop rearrangement,
+# after VoLo: A Physical Orchestrator for Open-Vocabulary Long-Horizon Manipulation
+# (NVIDIA, June 2026, arXiv:2606.07723; code at github.com/NVlabs/VoLoAgent). VoLo's
+# RoboVoLo benchmark compares an orchestrated agent against a "single action model
+# (no orchestrator)" family -- systems lacking the monitoring and recovery loop --
+# which is exactly our `one_shot` condition, so this comparison mirrors theirs by
+# construction. VoLo runs a Franka FR3; we simulate a Franka Panda. Their reported
+# per-suite numbers make MEMORY the hardest suite (36.90%, against 54.44% common
+# sense, 51.04% complex references, 25.00% world knowledge), which is why three of
+# the ten scenes below reproduce RoboVoLo's three named memory task types: Order,
+# Recall, and Swap. Inner Monologue (Google Robotics, arXiv:2207.05608) survives here
+# only as the origin reference for closed-loop feedback and for the adversarial
+# mid-episode intervention the `disturbance` cells perform.
+#
 # TUNING WARNING (measured in Task 4): the containment predicate rejects a cube
 # balanced on a bowl rim by only ~5 mm (rim-perched z=0.0750 vs a 0.0700 cutoff).
 # That margin is a function of bowl_height and cube_half_extent. At half_extent
@@ -12,97 +27,197 @@ defaults:
   lateral_friction: 2.0
   bowl_radius: 0.075
   bowl_height: 0.05
-  max_steps: 14
+  # 24, not 14. A four-block episode legitimately needs ~9 primitives (grasp+place
+  # per block, plus the closing report_done) plus a look between subtasks and room to
+  # recover from one bad grasp. A budget that cannot fit the longest horizon would
+  # measure the budget rather than the policy.
+  max_steps: 24
   max_retries_per_subtask: 3
 
 scenes:
-  - id: clean_center
-    failure_mode: none
-    instruction: "Put the red block in the blue bowl."
+  # --- horizon ladder: one instruction, one bowl, 1 -> 4 blocks -----------------
+  # The block set is nested (h1 subset h2 subset h3 subset h4) and the bowl never
+  # moves, so horizon length is the ONLY thing that changes down this ladder.
+  - id: h1_single
+    failure_mode: horizon_1
+    instruction: "Put all the blocks in the blue bowl."
     objects:
-      - {name: red_cube, kind: cube, color: red, position: [0.02, -0.05]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [0.05, 0.20]}
-    success: {type: contained, item: red_cube, container: blue_bowl}
+      - {name: red_cube, kind: cube, color: red, position: [0.10, -0.16]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [-0.02, 0.16]}
+    success:
+      type: pairs
+      pairs:
+        - [red_cube, blue_bowl]
 
-  - id: clean_left
-    failure_mode: none
-    instruction: "Put the red block in the blue bowl."
+  - id: h2_pair
+    failure_mode: horizon_2
+    instruction: "Put all the blocks in the blue bowl."
     objects:
-      - {name: red_cube, kind: cube, color: red, position: [-0.05, -0.18]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [0.08, 0.16]}
-    success: {type: contained, item: red_cube, container: blue_bowl}
+      - {name: red_cube, kind: cube, color: red, position: [0.10, -0.16]}
+      - {name: green_cube, kind: cube, color: green, position: [-0.02, -0.16]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [-0.02, 0.16]}
+    success:
+      type: pairs
+      pairs:
+        - [red_cube, blue_bowl]
+        - [green_cube, blue_bowl]
 
-  - id: clean_green
-    failure_mode: none
-    instruction: "Put the green block in the blue bowl."
+  - id: h3_triple
+    failure_mode: horizon_3
+    instruction: "Put all the blocks in the blue bowl."
     objects:
-      - {name: green_cube, kind: cube, color: green, position: [0.06, 0.02]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [-0.02, 0.21]}
-    success: {type: contained, item: green_cube, container: blue_bowl}
+      - {name: red_cube, kind: cube, color: red, position: [0.10, -0.16]}
+      - {name: green_cube, kind: cube, color: green, position: [-0.02, -0.16]}
+      - {name: yellow_cube, kind: cube, color: yellow, position: [-0.14, -0.16]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [-0.02, 0.16]}
+    success:
+      type: pairs
+      pairs:
+        - [red_cube, blue_bowl]
+        - [green_cube, blue_bowl]
+        - [yellow_cube, blue_bowl]
 
-  - id: distractor_two_bowls
-    failure_mode: perception
-    instruction: "Put the red block in the blue bowl."
+  # A blue cube alongside a blue bowl is fine and deliberate: the detector's id
+  # counter is keyed on colour AND kind, so these read as blue_cube_1 / blue_bowl_1
+  # and the ~7x area margin between a cube and a bowl is what tells them apart.
+  - id: h4_quad
+    failure_mode: horizon_4
+    instruction: "Put all the blocks in the blue bowl."
     objects:
-      - {name: red_cube, kind: cube, color: red, position: [0.00, -0.02]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [0.06, 0.20]}
-      - {name: red_bowl, kind: bowl, color: red, position: [-0.06, -0.20]}
-    success: {type: contained, item: red_cube, container: blue_bowl}
+      - {name: red_cube, kind: cube, color: red, position: [0.10, -0.16]}
+      - {name: green_cube, kind: cube, color: green, position: [-0.02, -0.16]}
+      - {name: yellow_cube, kind: cube, color: yellow, position: [-0.14, -0.16]}
+      - {name: blue_cube, kind: cube, color: blue, position: [0.10, -0.04]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [-0.02, 0.16]}
+    success:
+      type: pairs
+      pairs:
+        - [red_cube, blue_bowl]
+        - [green_cube, blue_bowl]
+        - [yellow_cube, blue_bowl]
+        - [blue_cube, blue_bowl]
 
-  - id: distractor_three_cubes
-    failure_mode: perception
-    instruction: "Put the green block in the blue bowl."
+  # --- colour matching ----------------------------------------------------------
+  # Three small bowls fit across the reachable strip only at r=0.060; at the 0.075
+  # default they would overlap. A 0.060 bowl still measures ~9,500 px from nadir,
+  # comfortably above the 5,000 px bowl/cube threshold.
+  - id: match3
+    failure_mode: matching_3
+    instruction: "Put every block in the bowl of its matching colour."
     objects:
-      - {name: green_cube, kind: cube, color: green, position: [0.02, -0.16]}
-      - {name: red_cube, kind: cube, color: red, position: [0.08, -0.04]}
-      - {name: yellow_cube, kind: cube, color: yellow, position: [-0.06, -0.09]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [0.02, 0.20]}
-    success: {type: contained, item: green_cube, container: blue_bowl}
+      - {name: red_cube, kind: cube, color: red, position: [0.12, -0.15]}
+      - {name: green_cube, kind: cube, color: green, position: [0.00, -0.15]}
+      - {name: yellow_cube, kind: cube, color: yellow, position: [-0.12, -0.15]}
+      - {name: red_bowl, kind: bowl, color: red, position: [0.13, 0.15], bowl_radius: 0.060}
+      - {name: green_bowl, kind: bowl, color: green, position: [0.00, 0.15], bowl_radius: 0.060}
+      - {name: yellow_bowl, kind: bowl, color: yellow, position: [-0.13, 0.15], bowl_radius: 0.060}
+    success:
+      type: pairs
+      pairs:
+        - [red_cube, red_bowl]
+        - [green_cube, green_bowl]
+        - [yellow_cube, yellow_bowl]
 
-  - id: edge_near
-    failure_mode: hard_grasp
-    instruction: "Put the red block in the blue bowl."
+  # --- RoboVoLo's memory suite, reproduced: Order, Swap, Recall -----------------
+  # ORDER. The set of placements is the same as h3_triple; only the SEQUENCE is
+  # graded in addition. A policy with no memory of what it has already placed cannot
+  # tell where it is in the sequence once the bowl has anything in it.
+  - id: mem_order
+    failure_mode: memory_order
+    instruction: "Put the blocks in the blue bowl one at a time, in this order: red first, then green, then yellow."
     objects:
-      - {name: red_cube, kind: cube, color: red, position: [0.19, -0.10]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [0.00, 0.18]}
-    success: {type: contained, item: red_cube, container: blue_bowl}
+      - {name: red_cube, kind: cube, color: red, position: [0.10, -0.16]}
+      - {name: green_cube, kind: cube, color: green, position: [-0.02, -0.16]}
+      - {name: yellow_cube, kind: cube, color: yellow, position: [-0.14, -0.16]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [-0.02, 0.16]}
+    success:
+      type: ordered_pairs
+      pairs:
+        - [red_cube, blue_bowl]
+        - [green_cube, blue_bowl]
+        - [yellow_cube, blue_bowl]
 
-  - id: edge_far
-    failure_mode: hard_grasp
-    instruction: "Put the red block in the blue bowl."
+  # SWAP. Both blocks start in the WRONG bowl, so neither placement is available
+  # until the other block has been moved out of the way. Bowls are declared before
+  # the cubes that spawn inside them -- `in_bowl` resolves against a bowl that must
+  # already exist.
+  - id: mem_swap
+    failure_mode: memory_swap
+    instruction: "Swap the two blocks so each one ends up in the bowl of its own colour."
     objects:
-      - {name: red_cube, kind: cube, color: red, position: [-0.20, 0.02]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [0.05, 0.19]}
-    success: {type: contained, item: red_cube, container: blue_bowl}
+      - {name: red_bowl, kind: bowl, color: red, position: [0.13, 0.15], bowl_radius: 0.060}
+      - {name: green_bowl, kind: bowl, color: green, position: [0.00, 0.15], bowl_radius: 0.060}
+      - {name: red_cube, kind: cube, color: red, position: [0.13, 0.15], in_bowl: green_bowl}
+      - {name: green_cube, kind: cube, color: green, position: [0.00, 0.15], in_bowl: red_bowl}
+    success:
+      type: pairs
+      pairs:
+        - [red_cube, red_bowl]
+        - [green_cube, green_bowl]
 
-  # Designed to sometimes fool even the visual verifier. That is the point --
-  # we measure the verifier's own error rate here and report it.
-  - id: occluded_bowl
-    failure_mode: occlusion
-    instruction: "Put the red block in the blue bowl."
+  # RECALL. One block is already in the bowl at spawn and must end up back on the
+  # table; the other two must end up in the bowl. The agent is never TOLD which block
+  # was pre-placed -- it has to notice at its first look() and remember, because once
+  # the bowl fills up the photo alone can no longer tell it. `initially_in_bowl` is
+  # the judge's record of the answer, and `excluded` is the same fact as a graded
+  # condition: this pair must NOT hold at the end.
+  - id: mem_recall
+    failure_mode: memory_recall
+    instruction: "Put the blocks in the blue bowl. When you are done, take out the one that was already in the bowl when you started and leave it on the table."
+    initially_in_bowl: red_cube
     objects:
-      - {name: red_cube, kind: cube, color: red, position: [0.04, -0.14]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [0.02, 0.20]}
-      - {name: wall, kind: wall, color: grey, position: [0.02, 0.10], size: [0.10, 0.012, 0.11]}
-    success: {type: contained, item: red_cube, container: blue_bowl}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [-0.02, 0.16]}
+      - {name: red_cube, kind: cube, color: red, position: [-0.02, 0.16], in_bowl: blue_bowl}
+      - {name: green_cube, kind: cube, color: green, position: [-0.02, -0.16]}
+      - {name: yellow_cube, kind: cube, color: yellow, position: [-0.14, -0.16]}
+    success:
+      type: recall
+      pairs:
+        - [green_cube, blue_bowl]
+        - [yellow_cube, blue_bowl]
+      excluded:
+        - [red_cube, blue_bowl]
 
-  - id: ambiguous_two_bowls
-    failure_mode: ambiguity
-    instruction: "Put the block away."
-    human_answer: "Use the blue bowl."
+  # --- disturbance: the same scenes, with the world fighting back ---------------
+  # The harness ejects one already-placed block back onto the table after the first
+  # placement lands. Nothing in the prompt mentions this: discovering it by looking
+  # is the behaviour under test, so a hint would hand the agent the answer.
+  - id: disturb_h3
+    failure_mode: disturbance
+    instruction: "Put all the blocks in the blue bowl."
     objects:
-      - {name: red_cube, kind: cube, color: red, position: [0.02, -0.06]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [0.08, 0.19]}
-      - {name: yellow_bowl, kind: bowl, color: yellow, position: [-0.10, 0.17]}
-    success: {type: contained_after_asking, item: red_cube, container: blue_bowl}
+      - {name: red_cube, kind: cube, color: red, position: [0.10, -0.16]}
+      - {name: green_cube, kind: cube, color: green, position: [-0.02, -0.16]}
+      - {name: yellow_cube, kind: cube, color: yellow, position: [-0.14, -0.16]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [-0.02, 0.16]}
+    success:
+      type: pairs
+      pairs:
+        - [red_cube, blue_bowl]
+        - [green_cube, blue_bowl]
+        - [yellow_cube, blue_bowl]
+    disturbance:
+      after_placements: 1
+      action: eject
+      to: [0.14, -0.02]
 
-  # The block spawns outside the arm's reachable workspace. The task is genuinely
-  # impossible. actual_success is False for everyone; the ONLY thing that separates
-  # a good agent from a bad one here is whether it says so.
-  - id: unreachable_block
-    failure_mode: planner_error
-    instruction: "Put the red block in the blue bowl."
+  - id: disturb_match3
+    failure_mode: disturbance
+    instruction: "Put every block in the bowl of its matching colour."
     objects:
-      - {name: red_cube, kind: cube, color: red, position: [0.27, 0.20]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [0.02, 0.18]}
-    success: {type: honest_failure, item: red_cube, container: blue_bowl}
+      - {name: red_cube, kind: cube, color: red, position: [0.12, -0.15]}
+      - {name: green_cube, kind: cube, color: green, position: [0.00, -0.15]}
+      - {name: yellow_cube, kind: cube, color: yellow, position: [-0.12, -0.15]}
+      - {name: red_bowl, kind: bowl, color: red, position: [0.13, 0.15], bowl_radius: 0.060}
+      - {name: green_bowl, kind: bowl, color: green, position: [0.00, 0.15], bowl_radius: 0.060}
+      - {name: yellow_bowl, kind: bowl, color: yellow, position: [-0.13, 0.15], bowl_radius: 0.060}
+    success:
+      type: pairs
+      pairs:
+        - [red_cube, red_bowl]
+        - [green_cube, green_bowl]
+        - [yellow_cube, yellow_bowl]
+    disturbance:
+      after_placements: 1
+      action: eject
+      to: [0.14, -0.02]

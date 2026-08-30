@@ -21,9 +21,9 @@ class StubClient:
 
 
 class _Scene:
-    id = "clean_center"
+    id = "h1_single"
     _seed = 0
-    instruction = "Put the red block in the blue bowl."
+    instruction = "Put all the blocks in the blue bowl."
     success = type("S", (), {"item": "red_cube", "container": "blue_bowl"})()
 
 

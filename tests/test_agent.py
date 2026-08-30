@@ -12,12 +12,10 @@ from agent.llm import VLMResponse
 from agent.memory import EpisodeMemory
 from agent.react import run_agent_policy
 from agent.verify import VerificationConfig
-from harness.scenes import load_scenes
 from primitives.api import PrimitiveAPI
 from robotsim.io import RobotIO
 from robotsim.world import World
-
-SCENES = {s.id: s for s in load_scenes()}
+from tests import SCENES, scene_with_human_answer, scene_with_unreachable
 
 
 class ScriptedClient:
@@ -56,7 +54,7 @@ class ScriptedClient:
 
 
 def _run(scene_id, script, tmp_path, config=None, verify_answer="yes"):
-    scene = SCENES[scene_id]
+    scene = SCENES[scene_id] if isinstance(scene_id, str) else scene_id
     w = World(scene, seed=0)
     io = RobotIO(w)
     api = PrimitiveAPI(io, image_dir=tmp_path)
@@ -76,7 +74,7 @@ def _prims(trace):
 # --- the loop ----------------------------------------------------------------
 
 def test_agent_completes_a_clean_scene(tmp_path):
-    trace, _ = _run("clean_center", [
+    trace, _ = _run("h1_single", [
         [{"name": "grasp", "args": {"object_id": "red_cube_1"}}],
         [{"name": "place", "args": {"target_id": "blue_bowl_1"}}],
         [{"name": "report_done", "args": {"success": True, "reason": "cube is in the bowl"}}],
@@ -89,8 +87,8 @@ def test_agent_completes_a_clean_scene(tmp_path):
 def test_agent_never_claims_success_after_exhausting_the_step_budget(tmp_path):
     """The core honesty guarantee: no path exists where a budget runs out and the
     agent still claims it finished the job."""
-    scene = SCENES["clean_center"]
-    trace, _ = _run("clean_center", [[{"name": "look", "args": {}}]], tmp_path)
+    scene = SCENES["h1_single"]
+    trace, _ = _run("h1_single", [[{"name": "look", "args": {}}]], tmp_path)
     assert trace.claimed_success is False
     assert "budget" in trace.claim_reason
     assert trace.stop_reason == "step budget exhausted"
@@ -99,8 +97,8 @@ def test_agent_never_claims_success_after_exhausting_the_step_budget(tmp_path):
 
 
 def test_agent_stops_after_the_retry_budget(tmp_path):
-    scene = SCENES["unreachable_block"]
-    trace, _ = _run("unreachable_block",
+    scene = scene_with_unreachable(SCENES["h1_single"], "red_cube")
+    trace, _ = _run(scene,
                     [[{"name": "grasp", "args": {"object_id": "red_cube_1"}}]], tmp_path)
     assert trace.claimed_success is False
     assert trace.recoveries >= 1
@@ -111,7 +109,7 @@ def test_agent_stops_after_the_retry_budget(tmp_path):
 
 
 def test_agent_records_escalation(tmp_path):
-    trace, _ = _run("ambiguous_two_bowls", [
+    trace, _ = _run(scene_with_human_answer(SCENES["h1_single"], "Use the blue bowl."), [
         [{"name": "ask_human", "args": {"question": "Which bowl?"}}],
         [{"name": "report_done", "args": {"success": False, "reason": "asked, then stopped"}}],
     ], tmp_path)
@@ -122,7 +120,7 @@ def test_agent_records_escalation(tmp_path):
 def test_agent_executes_exactly_one_primitive_per_step(tmp_path):
     """Two calls in one turn is the model trying to go open-loop. The loop takes the
     first and throws the rest away -- otherwise the agent quietly becomes the baseline."""
-    trace, _ = _run("clean_center", [
+    trace, _ = _run("h1_single", [
         [{"name": "grasp", "args": {"object_id": "red_cube_1"}},
          {"name": "place", "args": {"target_id": "blue_bowl_1"}}],
         [{"name": "report_done", "args": {"success": False, "reason": "stopping"}}],
@@ -132,7 +130,7 @@ def test_agent_executes_exactly_one_primitive_per_step(tmp_path):
 
 
 def test_agent_stops_when_the_model_calls_no_primitive(tmp_path):
-    trace, _ = _run("clean_center", [[]], tmp_path)
+    trace, _ = _run("h1_single", [[]], tmp_path)
     assert trace.claimed_success is False
     assert trace.stop_reason == "model produced no primitive call"
 
@@ -140,7 +138,7 @@ def test_agent_stops_when_the_model_calls_no_primitive(tmp_path):
 def test_memory_accumulates_failures(tmp_path):
     """The measured before-case in one assertion: what happened on step N must still
     be visible on step N+2, long after the raw feedback has scrolled away."""
-    _, client = _run("clean_center", [
+    _, client = _run("h1_single", [
         [{"name": "grasp", "args": {"object_id": "no_such_cube_1"}}],
         [{"name": "look", "args": {}}],
         [{"name": "report_done", "args": {"success": False, "reason": "stopping"}}],
@@ -155,7 +153,7 @@ def test_memory_accumulates_failures(tmp_path):
 def test_memory_survives_more_than_one_turn(tmp_path):
     """The ablation, as a unit test: the answer to an ask_human is still in context
     two steps later. Without memory it was gone after one."""
-    _, client = _run("ambiguous_two_bowls", [
+    _, client = _run(scene_with_human_answer(SCENES["h1_single"], "Use the blue bowl."), [
         [{"name": "ask_human", "args": {"question": "Which bowl should I use?"}}],
         [{"name": "look", "args": {}}],
         [{"name": "look", "args": {}}],
@@ -166,7 +164,7 @@ def test_memory_survives_more_than_one_turn(tmp_path):
 
 
 def test_unknown_tool_name_does_not_crash_the_episode(tmp_path):
-    trace, _ = _run("clean_center", [
+    trace, _ = _run("h1_single", [
         [{"name": "teleport", "args": {}}],
         [{"name": "report_done", "args": {"success": False, "reason": "stopping"}}],
     ], tmp_path)
@@ -178,7 +176,7 @@ def test_unknown_tool_name_does_not_crash_the_episode(tmp_path):
 
 
 def test_every_acting_step_carries_a_verdict(tmp_path):
-    trace, _ = _run("clean_center", [
+    trace, _ = _run("h1_single", [
         [{"name": "grasp", "args": {"object_id": "red_cube_1"}}],
         [{"name": "report_done", "args": {"success": True, "reason": "held it"}}],
     ], tmp_path)
@@ -187,7 +185,7 @@ def test_every_acting_step_carries_a_verdict(tmp_path):
 
 
 def test_l3_calls_are_counted_on_the_trace(tmp_path):
-    trace, client = _run("clean_center", [
+    trace, client = _run("h1_single", [
         [{"name": "grasp", "args": {"object_id": "red_cube_1"}}],
         [{"name": "report_done", "args": {"success": True, "reason": "held it"}}],
     ], tmp_path)
@@ -195,7 +193,7 @@ def test_l3_calls_are_counted_on_the_trace(tmp_path):
 
 
 def test_layers_off_means_no_verification_calls(tmp_path):
-    trace, client = _run("clean_center", [
+    trace, client = _run("h1_single", [
         [{"name": "grasp", "args": {"object_id": "red_cube_1"}}],
         [{"name": "report_done", "args": {"success": True, "reason": "held it"}}],
     ], tmp_path, config=VerificationConfig(l1=False, l2=False, l3=False))
@@ -205,7 +203,7 @@ def test_layers_off_means_no_verification_calls(tmp_path):
 
 
 def test_stop_reason_is_never_empty(tmp_path):
-    trace, _ = _run("clean_center", [
+    trace, _ = _run("h1_single", [
         [{"name": "report_done", "args": {"success": True, "reason": "done"}}],
     ], tmp_path)
     assert trace.stop_reason

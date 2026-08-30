@@ -53,7 +53,10 @@ TOOLS = [
                         "description": "Id of a block from the detection list."}},
                     "required": ["object_id"]}},
     {"type": "function", "name": "place",
-     "description": "Carry whatever is held over the named target and release it.",
+     "description": "Carry whatever is held over the named target and release it. "
+                    "If the target is a bowl the block is dropped into a free spot "
+                    "inside it; if the target is another block the block is set down "
+                    "on the table BESIDE it, never stacked on top of it.",
      "parameters": {"type": "object",
                     "properties": {"target_id": {
                         "type": "string",
@@ -102,14 +105,23 @@ def dispatch(api: PrimitiveAPI, name: str, args: dict) -> Feedback:
     raise KeyError(name)
 
 
-def plan_once(scene, seed: int, io, api, client, tools, dispatch) -> EpisodeTrace:
+def plan_once(scene, seed: int, io, api, client, tools, dispatch,
+              on_step=None) -> EpisodeTrace:
     """Plan the whole episode in one VLM call, then execute it without looking.
 
     `io`, `api`, `client`, `tools` and `dispatch` are injected so the harness owns the
     simulator and this module stays a policy: it decides what to call, never what the
     result meant.
+
+    `on_step` is a zero-argument callback the HARNESS may pass, invoked after every
+    primitive this plan executes -- the same hook, at the same points, as the agentic
+    loop gets, so both conditions meet an identical world. It is opaque here: it takes
+    no arguments, returns nothing, and this policy cannot tell whether it did anything.
+    Default None is a no-op, so existing behaviour is unchanged.
     """
+    notify = on_step or (lambda: None)
     first = api.look()
+    notify()
     trace = EpisodeTrace(steps=[{"primitive": "look", "args": {}, "reasoning": "",
                                  "feedback": first.to_dict()}])
 
@@ -129,6 +141,7 @@ def plan_once(scene, seed: int, io, api, client, tools, dispatch) -> EpisodeTrac
     for tool_call in response.tool_calls[: scene.max_steps]:
         args = tool_call.get("args", {}) or {}
         feedback = dispatch(api, tool_call["name"], args)
+        notify()
         trace.steps.append({"primitive": tool_call["name"], "args": args,
                             "reasoning": response.text, "feedback": feedback.to_dict()})
         # Everything below reads the model's OWN call, never the feedback it produced.

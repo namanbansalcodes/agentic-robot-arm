@@ -6,7 +6,7 @@ UV := uv
 # the macOS SDK declaration of fdopen. Overriding the macro is what makes it build.
 BUILD_ENV := CFLAGS="-std=gnu17 -Dfdopen=fdopen" CXXFLAGS="-Dfdopen=fdopen"
 
-.PHONY: help setup spike test baseline agent judge judge-live report evidence clean
+.PHONY: help setup spike test one-shot agentic judge judge-live report evidence clean
 
 # A bare `make` must never rebuild the venv by accident.
 .DEFAULT_GOAL := help
@@ -17,8 +17,8 @@ help:
 	@echo "make test        run the test suite (incl. the ground-truth firewall)"
 	@echo "make judge       THE headline target: full eval offline from cache, then report"
 	@echo "make judge-live  same eval, but calls the live VLM (needs SECRETS)"
-	@echo "make baseline    run only the blind open-loop baseline condition"
-	@echo "make agent       run only the self-verifying agent condition"
+	@echo "make one-shot    run only the blind open-loop condition"
+	@echo "make agentic     run only the self-verifying agentic condition"
 	@echo "make report      rebuild the report from existing results/"
 	@echo "make evidence    curate the judge-facing pack into docs/evidence/"
 	@echo "make clean       wipe results/ and spike/out/"
@@ -34,11 +34,11 @@ spike:
 test:
 	$(PYTEST) tests/ -v
 
-baseline:
-	$(PY) -m harness.run --conditions baseline --mode replay
+one-shot:
+	$(PY) -m harness.run --conditions one_shot --mode replay
 
-agent:
-	$(PY) -m harness.run --conditions agent --mode replay
+agentic:
+	$(PY) -m harness.run --conditions agentic --mode replay
 
 # The headline target. Runs the ENTIRE eval offline, free, from the committed cache.
 judge: test

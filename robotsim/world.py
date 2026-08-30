@@ -31,6 +31,10 @@ TABLE_RGBA = (0.20, 0.22, 0.27, 1.0)
 BACKGROUND = (224, 226, 231)
 
 TABLE_Z = 0.0                    # table top sits at z=0
+# A bowl's floor plate is a box of half-thickness 0.008 centred at z=0.008, so its top
+# surface is at 0.016. A cube spawned inside a bowl rests on that, not on the table.
+BOWL_FLOOR_HALF_THICKNESS = 0.008
+BOWL_FLOOR_TOP_Z = TABLE_Z + 2 * BOWL_FLOOR_HALF_THICKNESS
 WORKSPACE = {"x": (-0.22, 0.22), "y": (-0.22, 0.22), "z": (0.015, 0.35)}
 
 # Where the arm parks before every look(). Without this the arm sits directly under
@@ -90,11 +94,26 @@ class World:
         x, y = np.array(spec.position) + jitter
 
         if spec.kind == "cube":
+            z = TABLE_Z + spec.half_extent
+            if spec.in_bowl:
+                # Spawn INSIDE a bowl that has already been built. The cube takes the
+                # bowl's own (jittered) centre rather than a second independent draw,
+                # and sits on the bowl's floor plate rather than on the table: two
+                # jitter draws could otherwise put a cube far enough off centre to
+                # start outside the containment predicate, which would make the
+                # STARTING state of the memory scenes a per-seed coin flip.
+                if spec.in_bowl not in self._bowl_centers:
+                    raise ValueError(
+                        f"{spec.name}: in_bowl='{spec.in_bowl}' is not a bowl declared "
+                        "earlier in this scene's object list")
+                bx, by, _, _ = self._bowl_centers[spec.in_bowl]
+                x, y = bx, by
+                z = BOWL_FLOOR_TOP_Z + spec.half_extent
             self.sim.create_box(
                 body_name=spec.name,
                 half_extents=np.array([spec.half_extent] * 3),
                 mass=spec.mass,
-                position=np.array([x, y, TABLE_Z + spec.half_extent]),
+                position=np.array([x, y, z]),
                 rgba_color=rgba,
                 lateral_friction=spec.lateral_friction,
                 spinning_friction=0.05,
@@ -102,7 +121,7 @@ class World:
             self.body_names.append(spec.name)
 
         elif spec.kind == "bowl":
-            r, h, t = spec.radius, spec.height, 0.008
+            r, h, t = spec.radius, spec.height, BOWL_FLOOR_HALF_THICKNESS
             self.sim.create_box(
                 body_name=f"{spec.name}__base",
                 half_extents=np.array([r, r, t]), mass=0.0,
