@@ -46,7 +46,10 @@ class World:
         self.rng = np.random.default_rng(seed)
         self.sim = PyBullet(render_mode="rgb_array", n_substeps=20, renderer="Tiny",
                             background_color=np.array(BACKGROUND))
-        self.body_names: list[str] = []
+        self.body_names: list[str] = []          # logical scene vocabulary. NOTE: a bowl
+        # is five sim bodies -- {name}__base and {name}__wall0..3 -- so a bowl's entry
+        # here is NOT a valid argument to sim.get_base_position().
+        self._bowl_centers: dict = {}
 
         with self.sim.no_rendering():
             # We build floor and table ourselves: panda-gym's create_plane/create_table
@@ -73,6 +76,9 @@ class World:
             )
 
         self.robot.reset()
+        # The gripper command most recently applied. retract() replays it so that
+        # moving the arm never silently changes what the gripper is doing.
+        self._last_finger_cmd = 0.0
         self.settle(30)
 
     # --- construction ---------------------------------------------------
@@ -113,7 +119,6 @@ class World:
                     rgba_color=rgba, lateral_friction=1.0,
                 )
             self.body_names.append(spec.name)
-            self._bowl_centers = getattr(self, "_bowl_centers", {})
             self._bowl_centers[spec.name] = (float(x), float(y), r, h)
 
         elif spec.kind == "wall":
@@ -134,6 +139,7 @@ class World:
             self.sim.step()
 
     def apply_ee_action(self, delta_xyz, finger_cmd: float) -> None:
+        self._last_finger_cmd = float(finger_cmd)
         action = np.concatenate([np.clip(np.asarray(delta_xyz), -1.0, 1.0), [finger_cmd]])
         self.robot.set_action(action)
         self.sim.step()
@@ -147,16 +153,33 @@ class World:
     def joint_positions(self) -> list:
         return [float(self.robot.get_joint_angle(i)) for i in range(7)]
 
-    def retract(self) -> None:
-        """Park the arm clear of the overhead camera. Called before every look()."""
+    def retract(self, finger_cmd: float | None = None) -> bool:
+        """Park the arm clear of the overhead camera. Called before every look().
+
+        Returns True if the arm actually reached the home pose.
+
+        The finger command REPLAYS whatever was last applied, because panda-gym does
+        NOT treat 0.0 as "hold". Its action is relative to the width being measured
+        right now (panda.py: target = get_fingers_width() + action[-1] * 0.2), and
+        while a cube is squeezed the measured width sits ~5mm under the free width
+        from contact penetration. Targeting that measured value releases the squeeze,
+        the fingers spring wider, and the next step targets the new wider value -- it
+        ratchets open at ~+4.9mm per retraction and drops the cube about 11% of the
+        time (measured 24/27 held with 0.0, versus 27/27 replaying the grasp command).
+        Since look() calls retract(), that bug would have silently corrupted the
+        grasp -> look -> place flow, worst of all on the hard-grasp scenes.
+        """
+        cmd = self._last_finger_cmd if finger_cmd is None else finger_cmd
         target = np.array(HOME_RETRACT)
         for _ in range(200):
             delta = target - self.ee_position()
             if np.linalg.norm(delta) < 0.02:
-                break
-            # finger command is held open; a held object stays held (gripper state is
-            # unchanged by a move), which is intentional -- see primitives/api.look().
-            self.apply_ee_action(delta * 8.0, 0.0)
+                return True
+            self.apply_ee_action(delta * 8.0, cmd)
+        # Exhausting the loop leaves the arm somewhere over the table, occluding the
+        # very view retracting exists to clear. Report it rather than returning a
+        # silently degraded frame.
+        return bool(np.linalg.norm(target - self.ee_position()) < 0.02)
 
     def render(self, camera_name: str = "overhead") -> np.ndarray:
         cameras = {"overhead": OVERHEAD, "oblique": OBLIQUE}
