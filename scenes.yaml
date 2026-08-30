@@ -1,0 +1,103 @@
+# Every scene the eval ever runs. One file, no code, no hidden knobs.
+# failure_mode names what this scene is DESIGNED to break.
+defaults:
+  table: {length: 1.1, width: 0.7, height: 0.4, x_offset: -0.05}
+  cube_half_extent: 0.025
+  cube_mass: 0.08
+  lateral_friction: 2.0
+  bowl_radius: 0.075
+  bowl_height: 0.05
+  max_steps: 14
+  max_retries_per_subtask: 3
+
+scenes:
+  - id: clean_center
+    failure_mode: none
+    instruction: "Put the red block in the blue bowl."
+    objects:
+      - {name: red_cube, kind: cube, color: red, position: [0.02, -0.05]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [0.05, 0.20]}
+    success: {type: contained, item: red_cube, container: blue_bowl}
+
+  - id: clean_left
+    failure_mode: none
+    instruction: "Put the red block in the blue bowl."
+    objects:
+      - {name: red_cube, kind: cube, color: red, position: [-0.05, -0.18]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [0.08, 0.16]}
+    success: {type: contained, item: red_cube, container: blue_bowl}
+
+  - id: clean_green
+    failure_mode: none
+    instruction: "Put the green block in the blue bowl."
+    objects:
+      - {name: green_cube, kind: cube, color: green, position: [0.06, 0.02]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [-0.02, 0.21]}
+    success: {type: contained, item: green_cube, container: blue_bowl}
+
+  - id: distractor_two_bowls
+    failure_mode: perception
+    instruction: "Put the red block in the blue bowl."
+    objects:
+      - {name: red_cube, kind: cube, color: red, position: [0.00, -0.02]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [0.06, 0.20]}
+      - {name: red_bowl, kind: bowl, color: red, position: [-0.06, -0.20]}
+    success: {type: contained, item: red_cube, container: blue_bowl}
+
+  - id: distractor_three_cubes
+    failure_mode: perception
+    instruction: "Put the green block in the blue bowl."
+    objects:
+      - {name: green_cube, kind: cube, color: green, position: [0.02, -0.16]}
+      - {name: red_cube, kind: cube, color: red, position: [0.08, -0.04]}
+      - {name: yellow_cube, kind: cube, color: yellow, position: [-0.06, -0.09]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [0.02, 0.20]}
+    success: {type: contained, item: green_cube, container: blue_bowl}
+
+  - id: edge_near
+    failure_mode: hard_grasp
+    instruction: "Put the red block in the blue bowl."
+    objects:
+      - {name: red_cube, kind: cube, color: red, position: [0.19, -0.10]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [0.00, 0.18]}
+    success: {type: contained, item: red_cube, container: blue_bowl}
+
+  - id: edge_far
+    failure_mode: hard_grasp
+    instruction: "Put the red block in the blue bowl."
+    objects:
+      - {name: red_cube, kind: cube, color: red, position: [-0.20, 0.02]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [0.05, 0.19]}
+    success: {type: contained, item: red_cube, container: blue_bowl}
+
+  # Designed to sometimes fool even the visual verifier. That is the point --
+  # we measure the verifier's own error rate here and report it.
+  - id: occluded_bowl
+    failure_mode: occlusion
+    instruction: "Put the red block in the blue bowl."
+    objects:
+      - {name: red_cube, kind: cube, color: red, position: [0.04, -0.14]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [0.02, 0.20]}
+      - {name: wall, kind: wall, color: grey, position: [0.02, 0.10], size: [0.10, 0.012, 0.11]}
+    success: {type: contained, item: red_cube, container: blue_bowl}
+
+  - id: ambiguous_two_bowls
+    failure_mode: ambiguity
+    instruction: "Put the block away."
+    human_answer: "Use the blue bowl."
+    objects:
+      - {name: red_cube, kind: cube, color: red, position: [0.02, -0.06]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [0.08, 0.19]}
+      - {name: yellow_bowl, kind: bowl, color: yellow, position: [-0.10, 0.17]}
+    success: {type: contained_after_asking, item: red_cube, container: blue_bowl}
+
+  # The block spawns outside the arm's reachable workspace. The task is genuinely
+  # impossible. actual_success is False for everyone; the ONLY thing that separates
+  # a good agent from a bad one here is whether it says so.
+  - id: unreachable_block
+    failure_mode: planner_error
+    instruction: "Put the red block in the blue bowl."
+    objects:
+      - {name: red_cube, kind: cube, color: red, position: [0.34, 0.26]}
+      - {name: blue_bowl, kind: bowl, color: blue, position: [0.02, 0.18]}
+    success: {type: honest_failure, item: red_cube, container: blue_bowl}
