@@ -178,6 +178,7 @@ def headline_table(results) -> Table:
             f"`{summary.condition}`",
             n,
             _rate(sum(1 for r in episodes if r.actual_success), n),
+            f"{summary.mean_progress:.2f}",
             _rate(sum(1 for r in episodes if r.claimed_success), n),
             f"**{_signed(summary.honesty_gap)}**",
             summary.false_success_count,
@@ -190,20 +191,24 @@ def headline_table(results) -> Table:
             summary.replay_drift,
         ])
     return Table(
-        headers=["condition", "episodes", "task success", "claimed success",
+        headers=["condition", "episodes", "task success", "mean progress",
+                 "claimed success",
                  "honesty gap", "false successes", "recoveries/ep", "escalation rate",
                  "mean VLM calls", "total tokens", "total cost", "mean wall s",
                  "replay drift"],
         rows=rows,
         caption="honesty gap = claimed success rate minus task success rate, on the "
                 "same episodes. It is signed: positive means the agent reported work "
-                "it did not do. `replay drift` is the number of cached responses that "
-                "did not match on replay; anything but 0 means the run is not "
+                "it did not do. `mean progress` is the fraction of graded (block, "
+                "bowl) conditions satisfied, averaged over episodes: it separates "
+                "\"moved nothing\" from \"moved three of four\", which task success "
+                "cannot. `replay drift` is the number of cached responses that did "
+                "not match on replay; anything but 0 means the run is not "
                 "reproducible.")
 
 
 def ladder_table(results) -> Table:
-    """Each rung's delta over the rung below it. The deltas ARE the ablation."""
+    """Each row's delta over the row above it. The delta IS the comparison."""
     summaries = summaries_for(results)
     rows = []
     previous = None
@@ -216,8 +221,8 @@ def ladder_table(results) -> Table:
             gap_delta = _signed(summary.honesty_gap - previous.honesty_gap)
         rows.append([
             f"`{summary.condition}`",
-            CONDITION_BLURB.get(summary.condition, "condition not in the planned "
-                                                   "ladder"),
+            CONDITION_BLURB.get(summary.condition,
+                                "condition not in the planned comparison"),
             f"{summary.task_success_rate:.2f}",
             success_delta,
             f"{summary.honesty_gap:+.2f}",
@@ -228,9 +233,9 @@ def ladder_table(results) -> Table:
         headers=["condition", "what it adds", "task success", "Δ task success",
                  "honesty gap", "Δ honesty gap"],
         rows=rows,
-        caption="Δ is against the row directly above, so each line prices exactly one "
-                "layer. A negative Δ honesty gap is the improvement: the agent stopped "
-                "claiming work it had not done.")
+        caption="Δ is against the row directly above, so the second line prices the "
+                "loop and nothing else. A negative Δ honesty gap is the improvement: "
+                "the agent stopped claiming work it had not done.")
 
 
 def failure_mode_tables(results) -> list:
@@ -524,10 +529,12 @@ def build_sections(results, linkable=None) -> list:
                   "claimed success the oracle scored as a failure."),
             ("table", headline_table(results)),
         ]),
-        Section("The ablation ladder: what each layer bought", [
-            ("p", "Each row switches on exactly one more verification layer than the "
-                  "row above it. The deltas are the measurement; the absolute rates "
-                  "are context."),
+        Section("One-shot versus agentic: what the loop bought", [
+            ("p", "The two conditions share the model, the tool schema, the pixels, "
+                  "the scenes and the step budget. The only difference is that one "
+                  "plans once and executes blind while the other acts a primitive at "
+                  "a time and reads its own feedback. The delta is the measurement; "
+                  "the absolute rates are context."),
             ("table", ladder_table(results)),
         ]),
         Section("Per-scene breakdown, grouped by failure mode", [

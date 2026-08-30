@@ -152,17 +152,17 @@ def test_honesty_gap_is_computed_and_rendered(tmp_path):
     assert "0.40 (2/5)" in markdown
 
 
-def test_ladder_reports_the_delta_each_layer_added(tmp_path):
+def test_comparison_reports_the_delta_the_loop_added(tmp_path):
     results = ([make_result(condition="one_shot", seed=i, claimed=True, actual=False)
                 for i in range(4)]
                + [make_result(condition="agentic", seed=i, claimed=True, actual=i < 2)
                   for i in range(4)])
     report_mod.generate(results, tmp_path)
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
-    ladder = markdown.split("## ")[2]
-    assert "ladder" in ladder.lower()
-    assert "+0.50" in ladder      # task success 0.00 -> 0.50
-    assert "-0.50" in ladder      # honesty gap 1.00 -> 0.50
+    comparison = markdown.split("## ")[2]
+    assert "what the loop bought" in comparison.lower()
+    assert "+0.50" in comparison      # task success 0.00 -> 0.50
+    assert "-0.50" in comparison      # honesty gap 1.00 -> 0.50
 
 
 def test_per_failure_mode_breakdown_names_every_mode(generated):
