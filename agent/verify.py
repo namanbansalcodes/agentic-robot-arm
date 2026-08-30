@@ -58,6 +58,7 @@ class Verdict:
     ok: bool
     layer: Optional[str] = None
     reason: str = ""
+    informational: bool = False   # observed and paid for, but not treated as a failure
 
 
 class Verifier:
@@ -117,6 +118,18 @@ class Verifier:
             # so a hedge is a no -- treating an unparseable answer as a pass would make
             # the layer report success exactly when it was least sure.
             if not response.text.strip().lower().startswith("yes"):
+                # In verify-every mode a check fired at a NON-boundary step is
+                # informational only. "Is the cube in the bowl?" is correctly "no"
+                # after a move_to, and counting that as a failure would make the
+                # agent thrash against its own verifier -- turning the removed
+                # experiment into a strawman. The honest question that experiment
+                # asks is "does checking more often buy anything?", so it must pay
+                # the token cost without being sabotaged by a question that was
+                # never meaningful at that step.
+                if subtask is None and self.config.verify_every_primitive:
+                    return Verdict(True, "L3",
+                                   f"(informational) {question} -> "
+                                   f"{response.text.strip()}", informational=True)
                 return Verdict(False, "L3",
                                f"visual check failed: {question} -> "
                                f"{response.text.strip()}")

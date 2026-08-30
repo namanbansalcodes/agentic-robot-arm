@@ -137,3 +137,23 @@ def test_verify_every_primitive_runs_l3_without_a_boundary():
 def test_labels_are_stable_condition_names(cfg, label):
     """These labels become cache keys and report rows -- they must not drift."""
     assert cfg.label == label
+
+
+def test_verify_every_non_boundary_failure_is_informational_not_a_failure():
+    """The removed-experiment must pay the token cost without being a strawman.
+    "Is the cube in the bowl?" is correctly "no" after a move_to, and treating that
+    as a failure would make the agent thrash against its own verifier."""
+    stub = StubClient(answer="no\nthe cube is on the table")
+    v = Verifier(VerificationConfig(verify_every_primitive=True), stub)
+    verdict = v.check(_fb(primitive="move_to", status="ok"), subtask=None,
+                      scene=_Scene(), image_png=b"png", step_index=0)
+    assert stub.calls == 1, "it must still cost a call -- that is what we are pricing"
+    assert verdict.ok is True and verdict.informational is True
+
+
+def test_verify_every_still_fails_hard_at_a_real_boundary():
+    stub = StubClient(answer="no\nthe bowl is empty")
+    v = Verifier(VerificationConfig(verify_every_primitive=True), stub)
+    verdict = v.check(_fb(primitive="place", status="ok", fingers_width=0.07),
+                      subtask="placed", scene=_Scene(), image_png=b"png", step_index=1)
+    assert verdict.ok is False and verdict.layer == "L3" and verdict.informational is False
