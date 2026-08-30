@@ -37,10 +37,24 @@ roughly 0.04-0.06 m means a block is between the fingers; below about 0.012 m th
 fingers have closed on empty air.
 """
 
+# The tail below is the ONLY thing that differs between the two conditions. Everything
+# above -- all 1430 bytes of PRIMITIVE_REFERENCE -- is the same object, not a copy, so
+# the two prompts cannot drift apart.
+#
+# The "all in this one turn" sentence is a FAIRNESS fix, not steering toward failure.
+# Without it the Interactions API pauses at the first function_call (status
+# 'requires_action') and the baseline executes exactly one primitive per episode --
+# which would hand us a baseline crippled by API turn semantics rather than by its
+# own blindness, and a comparison worth nothing. With it, the model emits a genuine
+# multi-step plan and the measurement is of open-loop execution, which is the thing
+# under test.
 BASELINE_SYSTEM = PRIMITIVE_REFERENCE + """
 You are planning in ONE shot. Study the photo, then emit the complete sequence of
 primitive calls that accomplishes the instruction. The plan will be executed exactly
-as written, without pausing, and you will not see the results. Emit the calls now.
+as written, without pausing, and you will not see the results.
+
+Emit EVERY call you need in this single turn, in order, as parallel function calls.
+Do not stop after one call -- you will not get another turn. Finish with report_done.
 """
 
 AGENT_SYSTEM = PRIMITIVE_REFERENCE + """
