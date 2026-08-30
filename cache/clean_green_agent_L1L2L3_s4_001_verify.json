@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "42e56e88864523c2",
+  "response": {
+    "input_tokens": 1148,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 213,
+    "text": "no\nThe green cube is resting on the table surface.",
+    "tool_calls": []
+  }
+}

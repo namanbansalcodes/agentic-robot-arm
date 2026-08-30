@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "e7e5046ab70b5513",
+  "response": {
+    "input_tokens": 2373,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 379,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The red block is located outside the workspace of the robot arm, making the task impossible to complete.",
+          "success": false
+        },
+        "id": "call_408956",
+        "name": "report_done"
+      }
+    ]
+  }
+}

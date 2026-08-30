@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "998c5a30b4fa825a",
+  "response": {
+    "input_tokens": 2323,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 199,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The green block has been placed in the blue bowl, as verified by the most recent overhead photo.",
+          "success": true
+        },
+        "id": "call_376226",
+        "name": "report_done"
+      }
+    ]
+  }
+}

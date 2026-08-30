@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "68dda1f2c7123373",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 51,
+    "text": "no\nThe red cube is inside the yellow bowl, not the blue bowl.",
+    "tool_calls": []
+  }
+}

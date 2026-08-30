@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "69f7321fa0cf347f",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 70,
+    "text": "yes\nThe green cube is sitting inside the blue tray.",
+    "tool_calls": []
+  }
+}

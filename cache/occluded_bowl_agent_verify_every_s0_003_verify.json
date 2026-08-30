@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "514df9cc57c28488",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 87,
+    "text": "yes\nThe red cube is sitting entirely within the boundaries of the blue bowl.",
+    "tool_calls": []
+  }
+}

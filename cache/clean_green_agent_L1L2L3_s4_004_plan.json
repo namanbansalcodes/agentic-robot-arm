@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "b179d2f0c1184ada",
+  "response": {
+    "input_tokens": 2305,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 145,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The green block is missing from the workspace, so it cannot be placed in the blue bowl.",
+          "success": false
+        },
+        "id": "call_396490",
+        "name": "report_done"
+      }
+    ]
+  }
+}

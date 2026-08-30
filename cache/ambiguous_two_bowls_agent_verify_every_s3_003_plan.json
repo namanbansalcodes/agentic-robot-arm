@@ -1,0 +1,18 @@
+{
+  "prompt_hash": "077466da5f1cdbc1",
+  "response": {
+    "input_tokens": 2284,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 887,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "question": "Should I put the red block in the blue bowl or the yellow bowl?"
+        },
+        "id": "call_337785",
+        "name": "ask_human"
+      }
+    ]
+  }
+}

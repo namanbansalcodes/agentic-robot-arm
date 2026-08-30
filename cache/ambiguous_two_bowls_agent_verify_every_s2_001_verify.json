@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "79ede96441ee7fd5",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 44,
+    "text": "no\nThe red cube is on the table surface, not inside the blue bowl.",
+    "tool_calls": []
+  }
+}

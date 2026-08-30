@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "2ce6486463c2ad0e",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 82,
+    "text": "yes\nThe green cube is situated within the boundaries of the blue tray.",
+    "tool_calls": []
+  }
+}

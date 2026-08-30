@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "0cd5d0aafda3a447",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 79,
+    "text": "yes\nThe red cube is centered inside the blue square bowl.",
+    "tool_calls": []
+  }
+}

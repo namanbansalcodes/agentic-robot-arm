@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "f36f984a2956f093",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 57,
+    "text": "yes\nThe green cube is located inside the blue tray.",
+    "tool_calls": []
+  }
+}

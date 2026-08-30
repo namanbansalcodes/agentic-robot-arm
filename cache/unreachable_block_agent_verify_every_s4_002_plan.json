@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "f3a9192e8ce0a2c3",
+  "response": {
+    "input_tokens": 2373,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 151,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The red cube is outside the robot arm's workspace limits and cannot be grasped or moved.",
+          "success": false
+        },
+        "id": "call_526640",
+        "name": "report_done"
+      }
+    ]
+  }
+}

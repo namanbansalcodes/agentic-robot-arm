@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "82b14ab2ceafdd7c",
+  "response": {
+    "input_tokens": 1148,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 42,
+    "text": "yes\nThe gripper is grasping the red cube, which is suspended in the air above the table surface.",
+    "tool_calls": []
+  }
+}

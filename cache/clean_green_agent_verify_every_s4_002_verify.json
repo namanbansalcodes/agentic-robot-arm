@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "49aa131d3e48a4b4",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 69,
+    "text": "no\nThere is no green cube visible in the image.",
+    "tool_calls": []
+  }
+}

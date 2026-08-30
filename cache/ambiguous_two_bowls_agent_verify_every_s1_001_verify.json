@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "38e16320cb1a6182",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 40,
+    "text": "no\nThe red cube is on the table next to the bowls.",
+    "tool_calls": []
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "21ed7c231756eeee",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 49,
+    "text": "yes\nThe red cube is positioned within the boundaries of the blue bowl.",
+    "tool_calls": []
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "56212d28464f506d",
+  "response": {
+    "input_tokens": 1142,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 57,
+    "text": "yes\nThe red cube is located within the borders of the blue bowl.",
+    "tool_calls": []
+  }
+}
