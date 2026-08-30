@@ -6,8 +6,15 @@ Two views, deliberately:
   OBLIQUE   a human-legible three-quarter view, used for L3 visual verification and
             for the trajectory pages
 
-Nothing in this module reads simulator state. It takes a pybullet client and asks it
-to rasterize; the geometry is ours.
+This module never QUERIES simulator state -- it asks for no object pose, orientation,
+or contact. `render()` does ask PyBullet to rasterize the live scene, which is exactly
+what a real camera does: it returns pixels, not answers. That distinction is the whole
+firewall. `project()` and `unproject()` are pure geometry and need no simulator at all.
+
+The matrices are ours rather than panda-gym's because `sim.render()` builds its own
+internally and hands back only pixels -- there is nothing to invert. Owning them is
+what makes pixel -> world possible, and therefore what keeps coordinates out of the
+VLM's hands.
 """
 from dataclasses import dataclass
 
