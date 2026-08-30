@@ -6,7 +6,7 @@ UV := uv
 # the macOS SDK declaration of fdopen. Overriding the macro is what makes it build.
 BUILD_ENV := CFLAGS="-std=gnu17 -Dfdopen=fdopen" CXXFLAGS="-Dfdopen=fdopen"
 
-.PHONY: help setup spike test baseline agent judge judge-live report clean
+.PHONY: help setup spike test baseline agent judge judge-live report evidence clean
 
 # A bare `make` must never rebuild the venv by accident.
 .DEFAULT_GOAL := help
@@ -20,6 +20,7 @@ help:
 	@echo "make baseline    run only the blind open-loop baseline condition"
 	@echo "make agent       run only the self-verifying agent condition"
 	@echo "make report      rebuild the report from existing results/"
+	@echo "make evidence    curate the judge-facing pack into docs/evidence/"
 	@echo "make clean       wipe results/ and spike/out/"
 
 setup:
@@ -52,6 +53,10 @@ judge-live:
 
 report:
 	$(PY) -m harness.report
+
+evidence:
+	$(PY) -m harness.report --evidence
+	@echo "curated evidence written to docs/evidence/"
 
 clean:
 	rm -rf results/* spike/out/*
