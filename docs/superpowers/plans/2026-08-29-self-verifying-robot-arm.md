@@ -1976,6 +1976,9 @@ You do NOT get coordinates and you never produce coordinates. You refer to objec
 only by the ids given in the detection list, e.g. "red_cube_1", "blue_bowl_1".
 The control software computes every pose from the camera image.
 
+Ids describe what is visible in the CURRENT photo and are re-derived every time you
+call look(). They are not permanent names for objects.
+
 Primitives:
   look()                       Retract the arm and take a fresh overhead photo.
                                Returns the current detection list.
