@@ -1,0 +1,47 @@
+{
+  "prompt_hash": "d699945e8fc68c5a",
+  "response": {
+    "input_tokens": 2190,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 1397,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_999927",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "green_bowl_1"
+        },
+        "id": "call_999928",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_999929",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "red_bowl_1"
+        },
+        "id": "call_999930",
+        "name": "place"
+      },
+      {
+        "args": {
+          "reason": "Swapped both cubes into their respective matching bowls.",
+          "success": true
+        },
+        "id": "call_999931",
+        "name": "report_done"
+      }
+    ]
+  }
+}

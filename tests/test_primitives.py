@@ -96,3 +96,35 @@ def test_feedback_text_is_compact_and_mentions_the_aperture(tmp_path):
     assert "gripper_aperture_m" in text and "visible:" in text
     assert len(text.splitlines()) <= 8
     world.close()
+
+
+def test_grasp_refuses_when_already_holding(tmp_path):
+    """Regression: an agent recovering from a disturbance grasped a second block while
+    still holding the first, dragged the held one out of the workspace, and every later
+    attempt returned a genuine 'unreachable' -- a corrupted world that read as an
+    impossible task. The gripper must refuse instead."""
+    world, api = _api("h3_triple", tmp_path=tmp_path)
+    api.look()
+    cubes = [d.id for d in api._detections.values() if d.kind == "cube"]
+    first = api.grasp(cubes[0])
+    assert first.status == "ok" and first.fingers_width > EMPTY_GRIP_THRESHOLD
+
+    second = api.grasp(cubes[1])
+    assert second.status == "error"
+    assert "already_holding" in second.error
+    # and it must not have moved: still holding the first block
+    assert second.fingers_width > EMPTY_GRIP_THRESHOLD
+    world.close()
+
+
+def test_grasp_allowed_again_after_placing(tmp_path):
+    world, api = _api("h3_triple", tmp_path=tmp_path)
+    api.look()
+    cubes = [d.id for d in api._detections.values() if d.kind == "cube"]
+    bowl = [d.id for d in api._detections.values() if d.kind == "bowl"][0]
+    api.grasp(cubes[0])
+    api.place(bowl)
+    api.look()
+    again = api.grasp(cubes[1])
+    assert again.status == "ok", again.error
+    world.close()

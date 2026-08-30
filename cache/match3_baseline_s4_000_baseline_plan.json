@@ -1,0 +1,71 @@
+{
+  "prompt_hash": "4df7af72697851e5",
+  "response": {
+    "input_tokens": 2226,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 327,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_517372",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "red_bowl_1"
+        },
+        "id": "call_517373",
+        "name": "place"
+      },
+      {
+        "args": {},
+        "id": "call_517374",
+        "name": "look"
+      },
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_517375",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "green_bowl_1"
+        },
+        "id": "call_517376",
+        "name": "place"
+      },
+      {
+        "args": {},
+        "id": "call_517377",
+        "name": "look"
+      },
+      {
+        "args": {
+          "object_id": "yellow_cube_1"
+        },
+        "id": "call_517378",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "yellow_bowl_1"
+        },
+        "id": "call_517379",
+        "name": "place"
+      },
+      {
+        "args": {
+          "reason": "All blocks successfully sorted into matching bowls.",
+          "success": true
+        },
+        "id": "call_517380",
+        "name": "report_done"
+      }
+    ]
+  }
+}

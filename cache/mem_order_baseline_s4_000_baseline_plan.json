@@ -1,0 +1,61 @@
+{
+  "prompt_hash": "8bd45255fcce046f",
+  "response": {
+    "input_tokens": 2198,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 811,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_838569",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_838570",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_838571",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_838572",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "yellow_cube_1"
+        },
+        "id": "call_838573",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_838574",
+        "name": "place"
+      },
+      {
+        "args": {
+          "reason": "The red, green, and yellow blocks have been placed in the blue bowl in the specified order.",
+          "success": true
+        },
+        "id": "call_838575",
+        "name": "report_done"
+      }
+    ]
+  }
+}

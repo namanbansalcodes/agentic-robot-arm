@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "ec0961b5aa5b7547",
+  "response": {
+    "input_tokens": 1150,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 134,
+    "text": "no\nThe red cube is resting on the table surface and is not being held or lifted by the gripper.",
+    "tool_calls": []
+  }
+}

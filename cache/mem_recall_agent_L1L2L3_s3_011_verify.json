@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "65738f4f530f73eb",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 115,
+    "text": "no\nThere is no block inside the yellow cube.",
+    "tool_calls": []
+  }
+}

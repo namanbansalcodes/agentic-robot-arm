@@ -1,0 +1,137 @@
+{
+  "prompt_hash": "9851547306c8a28f",
+  "response": {
+    "input_tokens": 2206,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 2304,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_581402",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_581403",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "yellow_cube_1"
+        },
+        "id": "call_581404",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_581405",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581468",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581469",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581470",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581471",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581472",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581473",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581474",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581475",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581476",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581477",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581478",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581479",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581480",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_581481",
+        "name": "grasp"
+      }
+    ]
+  }
+}

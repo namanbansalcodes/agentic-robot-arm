@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "c777a1ae18b218a6",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 133,
+    "text": "no\nThe blue tray is empty and the blocks are on the table.",
+    "tool_calls": []
+  }
+}

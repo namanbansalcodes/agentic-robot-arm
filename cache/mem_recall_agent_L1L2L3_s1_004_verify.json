@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "d4c4050a81081232",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 210,
+    "text": "yes\nThere are three blocks (yellow, red, and green) located inside the blue bowl.",
+    "tool_calls": []
+  }
+}

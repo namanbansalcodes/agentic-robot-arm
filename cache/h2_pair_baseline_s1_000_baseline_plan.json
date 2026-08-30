@@ -1,0 +1,47 @@
+{
+  "prompt_hash": "a3c512a89c646b33",
+  "response": {
+    "input_tokens": 2161,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 848,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_1200564",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_1200565",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_1200566",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_1200567",
+        "name": "place"
+      },
+      {
+        "args": {
+          "reason": "Both the red cube and green cube have been successfully placed in the blue bowl.",
+          "success": true
+        },
+        "id": "call_1200568",
+        "name": "report_done"
+      }
+    ]
+  }
+}

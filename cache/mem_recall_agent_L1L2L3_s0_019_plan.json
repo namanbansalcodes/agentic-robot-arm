@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "ba3bce2d3db76517",
+  "response": {
+    "input_tokens": 2729,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 961,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The green block is located outside the workspace of the robot arm and cannot be reached, making it impossible to complete the task of putting all blocks in the blue bowl.",
+          "success": false
+        },
+        "id": "call_1487744",
+        "name": "report_done"
+      }
+    ]
+  }
+}

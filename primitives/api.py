@@ -110,7 +110,9 @@ CLOSE = -1.0
 # a held cube ~0.044, open-and-empty ~0.080. 0.012 sits in the middle of a 44 mm gap, so
 # the L2 signal is a cliff rather than a threshold to be tuned. Widening it to rescue a
 # marginal grasp would blunt exactly the signal L2 exists to measure.
-EMPTY_GRIP_THRESHOLD = 0.012
+EMPTY_GRIP_THRESHOLD = 0.012                # below this the fingers closed on air
+OPEN_GRIP_THRESHOLD = 0.065                 # above this the gripper is open and empty
+#   measured: ~0.000 closed on air | ~0.044-0.050 holding a block | ~0.080 open+empty
 SERVO_GAIN = 8.0
 SERVO_TOL = 0.006
 
@@ -314,6 +316,17 @@ class PrimitiveAPI:
         if det.kind == "bowl":
             return self._feedback("grasp", {"object_id": object_id}, "error",
                                   error=f"bad_target: '{object_id}' is a bowl, not a graspable block")
+        # A gripper that is already full cannot pick anything up, and letting it try is
+        # actively destructive: measured on disturb_h3, an agent recovering from a
+        # disturbance grasped a second block while still holding the first, dragged the
+        # held one out of the workspace, and every later attempt on it then returned a
+        # genuine "unreachable" -- a corrupted world that looked like an impossible task.
+        # Refusing here turns that into a legible L1 error the agent can act on.
+        width = self.io.fingers_width()
+        if EMPTY_GRIP_THRESHOLD < width < OPEN_GRIP_THRESHOLD:
+            return self._feedback("grasp", {"object_id": object_id}, "error",
+                                  error=f"already_holding: the gripper is already holding a block "
+                                        f"(aperture {width:.4f} m). Place it before grasping another.")
         p = self._world_xy(det)
         if not self._in_workspace(p):
             # The bounds go in the message on purpose: "unreachable" alone invites a

@@ -1,0 +1,18 @@
+{
+  "prompt_hash": "2f62af3408a7f364",
+  "response": {
+    "input_tokens": 2441,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 158,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_1366701",
+        "name": "grasp"
+      }
+    ]
+  }
+}

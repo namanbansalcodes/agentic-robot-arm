@@ -1,0 +1,71 @@
+{
+  "prompt_hash": "e0e2d3abe6d33df0",
+  "response": {
+    "input_tokens": 2182,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 609,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_556336",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_556337",
+        "name": "place"
+      },
+      {
+        "args": {},
+        "id": "call_556338",
+        "name": "look"
+      },
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_556339",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_556340",
+        "name": "place"
+      },
+      {
+        "args": {},
+        "id": "call_556341",
+        "name": "look"
+      },
+      {
+        "args": {
+          "object_id": "yellow_cube_1"
+        },
+        "id": "call_556342",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_556343",
+        "name": "place"
+      },
+      {
+        "args": {
+          "reason": "All three blocks (red, green, and yellow) have been successfully placed in the blue bowl.",
+          "success": true
+        },
+        "id": "call_556344",
+        "name": "report_done"
+      }
+    ]
+  }
+}

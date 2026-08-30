@@ -1,0 +1,75 @@
+{
+  "prompt_hash": "bda0b508dff542da",
+  "response": {
+    "input_tokens": 2203,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 896,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_852351",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_852352",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_852353",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_852354",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "blue_cube_1"
+        },
+        "id": "call_852355",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_852356",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "yellow_cube_1"
+        },
+        "id": "call_852357",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_852358",
+        "name": "place"
+      },
+      {
+        "args": {
+          "reason": "Successfully put all four blocks in the blue bowl.",
+          "success": true
+        },
+        "id": "call_852359",
+        "name": "report_done"
+      }
+    ]
+  }
+}

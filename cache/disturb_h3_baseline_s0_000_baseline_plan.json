@@ -1,0 +1,71 @@
+{
+  "prompt_hash": "4f770b9dd7989dc8",
+  "response": {
+    "input_tokens": 2182,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 353,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_817382",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_817383",
+        "name": "place"
+      },
+      {
+        "args": {},
+        "id": "call_817384",
+        "name": "look"
+      },
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_817385",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_817386",
+        "name": "place"
+      },
+      {
+        "args": {},
+        "id": "call_817387",
+        "name": "look"
+      },
+      {
+        "args": {
+          "object_id": "yellow_cube_1"
+        },
+        "id": "call_817388",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_817389",
+        "name": "place"
+      },
+      {
+        "args": {
+          "reason": "All blocks are placed in the blue bowl.",
+          "success": true
+        },
+        "id": "call_817390",
+        "name": "report_done"
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "71f7719407d00b82",
+  "response": {
+    "input_tokens": 2600,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 95,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "All blocks (red cube and green cube) are already in the blue bowl.",
+          "success": true
+        },
+        "id": "call_795579",
+        "name": "report_done"
+      }
+    ]
+  }
+}

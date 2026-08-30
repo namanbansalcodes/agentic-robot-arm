@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "8dbcfcd4bbaa844e",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 266,
+    "text": "yes\nThe red block is inside the blue bowl, while the green block is on the rim and the yellow block is on the table.",
+    "tool_calls": []
+  }
+}

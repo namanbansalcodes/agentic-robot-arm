@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "f25bcad282866e90",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 91,
+    "text": "yes\nThe yellow and red blocks are both inside the blue bowl.",
+    "tool_calls": []
+  }
+}

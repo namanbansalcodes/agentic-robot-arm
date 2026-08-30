@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "659d015ad343dff3",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 179,
+    "text": "no\nAll blocks are outside of the blue container and there are no objects inside any cubes.",
+    "tool_calls": []
+  }
+}

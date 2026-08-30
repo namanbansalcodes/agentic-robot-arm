@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "a8c1251e24b520ee",
+  "response": {
+    "input_tokens": 1150,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 96,
+    "text": "yes\nThe gripper is holding the green cube elevated above the table surface.",
+    "tool_calls": []
+  }
+}

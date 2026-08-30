@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "d08d8d2e98de963f",
+  "response": {
+    "input_tokens": 2877,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 466,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The yellow cube lies outside the robot's workspace and is unreachable, so it cannot be put in the bowl.",
+          "success": false
+        },
+        "id": "call_1922476",
+        "name": "report_done"
+      }
+    ]
+  }
+}

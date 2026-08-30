@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "09ac6abbdf8a7ee0",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 110,
+    "text": "no\nThe blue bowl is empty.",
+    "tool_calls": []
+  }
+}

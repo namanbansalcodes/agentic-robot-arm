@@ -1,0 +1,61 @@
+{
+  "prompt_hash": "b2eb97696477453c",
+  "response": {
+    "input_tokens": 2226,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 679,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_901833",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "red_bowl_1"
+        },
+        "id": "call_901834",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_901835",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "green_bowl_1"
+        },
+        "id": "call_901836",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "yellow_cube_1"
+        },
+        "id": "call_901837",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "yellow_bowl_1"
+        },
+        "id": "call_901838",
+        "name": "place"
+      },
+      {
+        "args": {
+          "reason": "All blocks placed in their matching color bowls.",
+          "success": true
+        },
+        "id": "call_901839",
+        "name": "report_done"
+      }
+    ]
+  }
+}

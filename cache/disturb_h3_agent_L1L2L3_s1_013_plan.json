@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "ec5f96a53cb51334",
+  "response": {
+    "input_tokens": 2840,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 285,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The red cube lies outside the arm's reachable workspace, making it impossible to put all blocks in the blue bowl.",
+          "success": false
+        },
+        "id": "call_953354",
+        "name": "report_done"
+      }
+    ]
+  }
+}

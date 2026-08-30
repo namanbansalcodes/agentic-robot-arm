@@ -1,0 +1,39 @@
+{
+  "prompt_hash": "38335c4196c4276c",
+  "response": {
+    "input_tokens": 2190,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 2036,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_832004",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "red_bowl_1"
+        },
+        "id": "call_832005",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_832006",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "green_bowl_1"
+        },
+        "id": "call_832007",
+        "name": "place"
+      }
+    ]
+  }
+}

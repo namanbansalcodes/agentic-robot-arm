@@ -1,0 +1,75 @@
+{
+  "prompt_hash": "e019cc0d3d2b5c4d",
+  "response": {
+    "input_tokens": 2203,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 752,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "object_id": "blue_cube_1"
+        },
+        "id": "call_891041",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_891042",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "red_cube_1"
+        },
+        "id": "call_891043",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_891044",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "green_cube_1"
+        },
+        "id": "call_891045",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_891046",
+        "name": "place"
+      },
+      {
+        "args": {
+          "object_id": "yellow_cube_1"
+        },
+        "id": "call_891047",
+        "name": "grasp"
+      },
+      {
+        "args": {
+          "target_id": "blue_bowl_1"
+        },
+        "id": "call_891048",
+        "name": "place"
+      },
+      {
+        "args": {
+          "reason": "Placed all blocks (blue, red, green, yellow) into the blue bowl.",
+          "success": true
+        },
+        "id": "call_891049",
+        "name": "report_done"
+      }
+    ]
+  }
+}

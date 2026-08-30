@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "2a56dd9e0fc03e30",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 98,
+    "text": "yes\nThere are three blocks inside the blue tray.",
+    "tool_calls": []
+  }
+}

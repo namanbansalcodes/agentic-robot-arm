@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "f75b03c0e70246c3",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 189,
+    "text": "no\nThe green cube is a solid block and contains no other block.",
+    "tool_calls": []
+  }
+}
