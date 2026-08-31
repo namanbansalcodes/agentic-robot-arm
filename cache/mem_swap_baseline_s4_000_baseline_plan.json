@@ -10,28 +10,28 @@
         "args": {
           "object_id": "red_cube_1"
         },
-        "id": "call_832004",
+        "id": "call_1658881",
         "name": "grasp"
       },
       {
         "args": {
           "target_id": "red_bowl_1"
         },
-        "id": "call_832005",
+        "id": "call_1658882",
         "name": "place"
       },
       {
         "args": {
           "object_id": "green_cube_1"
         },
-        "id": "call_832006",
+        "id": "call_1658883",
         "name": "grasp"
       },
       {
         "args": {
           "target_id": "green_bowl_1"
         },
-        "id": "call_832007",
+        "id": "call_1658884",
         "name": "place"
       }
     ]

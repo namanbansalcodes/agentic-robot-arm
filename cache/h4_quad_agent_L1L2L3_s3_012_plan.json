@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "7396f59f50788c62",
+  "response": {
+    "input_tokens": 2818,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 453,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The remaining green and yellow blocks are located outside of the robot's workspace limits and cannot be reached.",
+          "success": false
+        },
+        "id": "call_1335134",
+        "name": "report_done"
+      }
+    ]
+  }
+}

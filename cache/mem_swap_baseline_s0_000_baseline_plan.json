@@ -10,19 +10,19 @@
         "args": {
           "object_id": "red_cube_1"
         },
-        "id": "call_625218",
+        "id": "call_960041",
         "name": "grasp"
       },
       {
         "args": {
           "target_id": "green_cube_1"
         },
-        "id": "call_625219",
+        "id": "call_960042",
         "name": "place"
       },
       {
         "args": {},
-        "id": "call_625220",
+        "id": "call_960043",
         "name": "look"
       }
     ]

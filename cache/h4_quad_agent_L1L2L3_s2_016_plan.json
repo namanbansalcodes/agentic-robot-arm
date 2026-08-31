@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "5428d9a6ac3ff930",
+  "response": {
+    "input_tokens": 2698,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 141,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "All three blocks (red, green, and yellow) are successfully placed inside the blue bowl.",
+          "success": true
+        },
+        "id": "call_1543217",
+        "name": "report_done"
+      }
+    ]
+  }
+}

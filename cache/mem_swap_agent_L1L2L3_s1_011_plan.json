@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "4d1675c55a66a496",
+  "response": {
+    "input_tokens": 2568,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 431,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The red block is in the red bowl, and the green block is in the green bowl. The task is successfully completed.",
+          "success": true
+        },
+        "id": "call_452792",
+        "name": "report_done"
+      }
+    ]
+  }
+}

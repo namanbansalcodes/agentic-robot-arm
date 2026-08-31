@@ -10,52 +10,52 @@
         "args": {
           "object_id": "red_cube_1"
         },
-        "id": "call_817382",
+        "id": "call_2265131",
         "name": "grasp"
       },
       {
         "args": {
           "target_id": "blue_bowl_1"
         },
-        "id": "call_817383",
+        "id": "call_2265132",
         "name": "place"
       },
       {
         "args": {},
-        "id": "call_817384",
+        "id": "call_2265133",
         "name": "look"
       },
       {
         "args": {
           "object_id": "green_cube_1"
         },
-        "id": "call_817385",
+        "id": "call_2265134",
         "name": "grasp"
       },
       {
         "args": {
           "target_id": "blue_bowl_1"
         },
-        "id": "call_817386",
+        "id": "call_2265135",
         "name": "place"
       },
       {
         "args": {},
-        "id": "call_817387",
+        "id": "call_2265136",
         "name": "look"
       },
       {
         "args": {
           "object_id": "yellow_cube_1"
         },
-        "id": "call_817388",
+        "id": "call_2265137",
         "name": "grasp"
       },
       {
         "args": {
           "target_id": "blue_bowl_1"
         },
-        "id": "call_817389",
+        "id": "call_2265138",
         "name": "place"
       },
       {
@@ -63,7 +63,7 @@
           "reason": "All blocks are placed in the blue bowl.",
           "success": true
         },
-        "id": "call_817390",
+        "id": "call_2265139",
         "name": "report_done"
       }
     ]

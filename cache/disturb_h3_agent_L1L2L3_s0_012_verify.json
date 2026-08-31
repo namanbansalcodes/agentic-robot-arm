@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "0dc7c1fbea2ff37d",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 160,
+    "text": "no\nThere are three blocks inside the blue bowl, not one.",
+    "tool_calls": []
+  }
+}

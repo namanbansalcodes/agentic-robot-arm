@@ -1,10 +1,10 @@
 {
-  "prompt_hash": "baff130a1e4475ca",
+  "prompt_hash": "ab35ae20523cd015",
   "response": {
-    "input_tokens": 1150,
+    "input_tokens": 1143,
     "model": "gemini-robotics-er-2-preview",
-    "output_tokens": 44,
-    "text": "yes\nThe gripper is holding the yellow cube high above the table.",
+    "output_tokens": 179,
+    "text": "no\nThere are two blocks inside the blue bowl.",
     "tool_calls": []
   }
 }

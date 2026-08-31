@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "fbaea5722b1a3146",
+  "response": {
+    "input_tokens": 2559,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 483,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "Each block has been placed into the bowl of its own colour: the red block is in the red bowl, and the green block is in the green bowl.",
+          "success": true
+        },
+        "id": "call_1003105",
+        "name": "report_done"
+      }
+    ]
+  }
+}

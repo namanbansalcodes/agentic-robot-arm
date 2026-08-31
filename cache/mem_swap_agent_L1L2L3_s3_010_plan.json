@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "8c079870add43dd9",
+  "response": {
+    "input_tokens": 2535,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 992,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "The green block is in the green bowl and the red block is in the red bowl, satisfying the requirement that each block ends up in the bowl of its own color.",
+          "success": true
+        },
+        "id": "call_1073647",
+        "name": "report_done"
+      }
+    ]
+  }
+}
