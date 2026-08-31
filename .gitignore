@@ -6,3 +6,5 @@ results/
 spike/out/
 .DS_Store
 .pytest_cache/
+cache_archive_*/
+docs/videos/imgs/

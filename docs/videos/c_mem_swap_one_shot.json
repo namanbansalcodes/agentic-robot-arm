@@ -1,0 +1,34 @@
+{
+ "gif": "c_mem_swap_one_shot.gif",
+ "condition": "one_shot",
+ "scene": "mem_swap",
+ "seed": 0,
+ "instruction": "Swap the two blocks so each one ends up in the bowl of its own colour.",
+ "claimed": true,
+ "actual": false,
+ "progress": 0.0,
+ "total": 2,
+ "reason": "the one-shot plan ran to completion",
+ "log": [
+  {
+   "call": "look()",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0000 m \u00b7 closed on air"
+  },
+  {
+   "call": "grasp(red_cube_1)",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0467 m \u00b7 holding a block"
+  },
+  {
+   "call": "place(green_cube_1)",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0800 m \u00b7 open, empty"
+  },
+  {
+   "call": "look()",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0800 m \u00b7 open, empty"
+  }
+ ]
+}

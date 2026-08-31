@@ -1,0 +1,64 @@
+{
+ "gif": "c_match3_agentic.gif",
+ "condition": "agentic",
+ "scene": "match3",
+ "seed": 1,
+ "instruction": "Put every block in the bowl of its matching colour.",
+ "claimed": true,
+ "actual": true,
+ "progress": 1.0,
+ "total": 3,
+ "reason": "Every block (red, green, and yellow) has been successfully placed into the bowl of its matching colour.",
+ "log": [
+  {
+   "call": "look()",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0000 m \u00b7 closed on air"
+  },
+  {
+   "call": "grasp(red_cube_1)",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0441 m \u00b7 holding a block"
+  },
+  {
+   "call": "place(red_bowl_1)",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0800 m \u00b7 open, empty"
+  },
+  {
+   "call": "grasp(green_cube_1)",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0440 m \u00b7 holding a block"
+  },
+  {
+   "call": "place(green_bowl_1)",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0800 m \u00b7 open, empty"
+  },
+  {
+   "call": "look()",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0800 m \u00b7 open, empty"
+  },
+  {
+   "call": "grasp(yellow_cube_1)",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0472 m \u00b7 holding a block"
+  },
+  {
+   "call": "place(yellow_bowl_1)",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0800 m \u00b7 open, empty"
+  },
+  {
+   "call": "look()",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0800 m \u00b7 open, empty"
+  },
+  {
+   "call": "report_done(True)",
+   "ok": true,
+   "detail": "ok \u00b7 gripper 0.0800 m \u00b7 open, empty"
+  }
+ ]
+}
