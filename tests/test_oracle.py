@@ -110,11 +110,13 @@ def test_progress_is_zero_at_spawn_and_one_when_solved(scene_id):
 
 
 def test_progress_is_a_fraction_of_the_graded_conditions():
-    world = World(SCENES["h4_quad"], seed=0)
+    """One of h3_triple's three graded pairs satisfied is 1/3, not 0 -- which is the
+    whole reason progress exists alongside task success."""
+    world = World(SCENES["h3_triple"], seed=0)
     oracle = Oracle(world)
     _drop_in(world, "red_cube", "blue_bowl")
     world.settle(20)
-    assert oracle.progress() == pytest.approx(0.25)
+    assert oracle.progress() == pytest.approx(1 / 3)
     world.close()
 
 

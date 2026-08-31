@@ -43,10 +43,16 @@ def test_a_small_bowl_still_reads_as_a_bowl():
 
 
 def test_a_cube_and_a_bowl_of_the_same_colour_get_distinct_ids():
-    """h4_quad puts a blue cube in front of a blue bowl. The id counter is keyed on
-    colour AND kind, so they must not collide."""
-    ids = {d.id for d in _detect("h4_quad")}
-    assert "blue_cube_1" in ids and "blue_bowl_1" in ids
+    """match3 puts a red cube and a red bowl in the same frame. The id counter is keyed
+    on colour AND kind, so they must not collide -- if they did, the agent would be
+    handed one name for two objects and could not address either reliably.
+
+    This used to be checked on h4_quad, which was dropped from the scene set because
+    its blue-cube/blue-bowl pairing was fatal rather than merely awkward (see
+    IMPROVEMENT_CHANGELOG.md). match3's bowls are small enough to survive the clash,
+    which is exactly why it is the right scene to assert the id rule on."""
+    ids = {d.id for d in _detect("match3")}
+    assert "red_cube_1" in ids and "red_bowl_1" in ids
 
 
 def test_same_colour_bowl_and_cube_are_told_apart_by_size():

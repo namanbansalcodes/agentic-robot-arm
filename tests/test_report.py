@@ -74,7 +74,6 @@ FAILURE_MODES = {
     "horizon_1": "h1_single",
     "horizon_2": "h2_pair",
     "horizon_3": "h3_triple",
-    "horizon_4": "h4_quad",
     "matching_3": "match3",
     "memory_order": "mem_order",
     "memory_swap": "mem_swap",
@@ -83,7 +82,7 @@ FAILURE_MODES = {
 }
 # The cell the visual verifier is marked on, and the cell nothing can succeed at.
 PROBE_MODE, PROBE_SCENE = "disturbance", report_mod.L3_PROBE_SCENE
-HARD_MODE = "horizon_4"
+HARD_MODE = "memory_swap"
 
 
 def dataset() -> list[EpisodeResult]:
