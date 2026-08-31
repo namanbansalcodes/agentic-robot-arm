@@ -1,4 +1,4 @@
-<h1 align="center">Does looking twice make a robot arm better?</h1>
+<h1 align="center">Agentic Robot Arm</h1>
 
 <p align="center">
   A Franka Panda driven by <b>Gemini Robotics-ER 2</b>.<br>
@@ -14,23 +14,76 @@
 
 <br>
 
+## Three tasks
+
+| | task | what it demands |
+|---|---|---|
+| **RECOVER** | put 3 blocks in the bowl — one gets removed mid-task | notice the world changed after the plan was made |
+| **SWAP** | two blocks start in each other's bowls | park one on the table before its bowl is free |
+| **SORT** | three blocks, three bowls | one colour-matched routing decision per object |
+
+These three names are used everywhere — in the charts, the tables, and the scene files
+(`disturb_h3`, `mem_swap`, `match3`).
+
+<br>
+
+---
+
+<br>
+
+### RECOVER
+
+A block that was already placed is taken back out, mid-task.
+
 <table>
-<tr>
-<th width="50%">one-shot</th>
-<th width="50%">agentic</th>
-</tr>
+<tr><th width="50%">one-shot</th><th width="50%">agentic</th></tr>
 <tr>
 <td><img src="docs/videos/c_disturb_h3_one_shot.gif" width="100%"></td>
 <td><img src="docs/videos/c_disturb_h3_agentic.gif" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><b>claims success · 2 of 3 placed</b></td>
-<td align="center"><b>notices · recovers · 3 of 3</b></td>
+<td align="center"><b>claims success</b> · 2 of 3 placed</td>
+<td align="center"><b>notices · recovers</b> · 3 of 3</td>
 </tr>
 </table>
 
-<p align="center"><i>A placed block is removed mid-task.<br>
-Left panel: the scene. Right panel: the overhead frame the model sees.</i></p>
+<br>
+
+### SWAP
+
+Red starts in the green bowl, green starts in the red bowl. Neither can go home first.
+
+<table>
+<tr><th width="50%">one-shot</th><th width="50%">agentic</th></tr>
+<tr>
+<td><img src="docs/videos/c_mem_swap_one_shot.gif" width="100%"></td>
+<td><img src="docs/videos/c_mem_swap_agentic.gif" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><b>claims success</b> · 0 of 2 placed</td>
+<td align="center"><b>parks one, then completes</b> · 2 of 2</td>
+</tr>
+</table>
+
+<br>
+
+### SORT
+
+Three blocks, three colour-matched bowls.
+
+<table>
+<tr><th width="50%">one-shot</th><th width="50%">agentic</th></tr>
+<tr>
+<td><img src="docs/videos/c_match3_one_shot.gif" width="100%"></td>
+<td><img src="docs/videos/c_match3_agentic.gif" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><b>claims success</b> · 2 of 3 placed</td>
+<td align="center"><b>completes</b> · 3 of 3</td>
+</tr>
+</table>
+
+<p align="center"><i>In every clip — left panel: the scene. Right panel: the overhead frame the model sees.</i></p>
 
 <br>
 
@@ -44,20 +97,27 @@ Left panel: the scene. Right panel: the overhead frame the model sees.</i></p>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/charts/success_dark.png">
-  <img alt="Task success by scenario" src="docs/charts/success_light.png" width="100%">
+  <img alt="Task success by task" src="docs/charts/success_light.png" width="100%">
 </picture>
 
 <br>
 
 | | one-shot | agentic |
 |---|:---:|:---:|
-| **Recover** after a placed block is removed | 0% | **100%** |
-| **Swap** two blocks that start in each other's bowls | 20% | **100%** |
-| **Route** three blocks to colour-matched bowls | 60% | **80%** |
+| **RECOVER** | 0% | **100%** |
+| **SWAP** | 20% | **100%** |
+| **SORT** | 60% | **80%** |
 
 <br>
 
-**False successes — claimed done, oracle disagreed:**  one-shot **11**, agentic **1** (15 episodes each).
+**False successes** — claimed done, oracle disagreed:  one-shot **11**, agentic **1**.
+
+<br>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/charts/false_dark.png">
+  <img alt="False successes by task" src="docs/charts/false_light.png" width="100%">
+</picture>
 
 <br>
 
@@ -65,6 +125,56 @@ Left panel: the scene. Right panel: the overhead frame the model sees.</i></p>
   <source media="(prefers-color-scheme: dark)" srcset="docs/charts/horizon_dark.png">
   <img alt="One-shot success versus horizon length" src="docs/charts/horizon_light.png" width="100%">
 </picture>
+
+<br>
+
+---
+
+<br>
+
+## What the results say
+
+<br>
+
+<table>
+<tr><td width="50%" align="center">
+
+### one-shot
+# 27%
+**4 of 15 episodes completed**
+
+claims success in **100%** of them
+
+**11 false successes**
+
+</td><td width="50%" align="center">
+
+### agentic
+# 93%
+**14 of 15 episodes completed**
+
+claims success in **100%** of them
+
+**1 false success**
+
+</td></tr>
+</table>
+
+<br>
+
+**Reading a plan once and executing it blind completes roughly a quarter of these tasks.
+Reading feedback between actions completes nearly all of them.**
+
+The gap is not model quality — the model is identical. It is that a one-shot planner commits
+to every step before seeing the result of any of them, so a single early failure silently
+invalidates everything after it.
+
+And it never finds out. One-shot claims success in **every episode it runs**, whether it moved
+three blocks or none. That is the number worth carrying: not that it fails more, but that
+**its report is uncorrelated with what happened**.
+
+Mean task progress tells the same story from the other side — one-shot **0.58**, agentic
+**0.98**. Blind execution usually gets *part* of the way. It just cannot tell you which part.
 
 <br>
 
@@ -156,63 +266,6 @@ make judge    # replays every episode offline — no API key, no network
 
 <br>
 
-## The agent never sees ground truth
-
-<br>
-
-```mermaid
-flowchart LR
-  subgraph BLIND["agent/ + primitives/ — blindfolded"]
-    direction TB
-    LOOP["ReAct loop<br/>+ episode memory"]
-    PRIM["5 primitives"]
-    PERC["perception<br/>HSV on pixels"]
-  end
-  FACADE["<b>RobotIO</b><br/>exactly 11 methods"]
-  subgraph PRIV["robotsim/ — privileged"]
-    direction TB
-    WORLD["World<br/>PyBullet"]
-    ORACLE["Oracle<br/>ground-truth poses"]
-  end
-  JUDGE["harness/<br/>scoring · disturbance"]
-  LOOP --> PRIM
-  PERC --> PRIM
-  PRIM --> FACADE
-  FACADE -->|"pixels · joints · aperture"| WORLD
-  JUDGE --> ORACLE
-  ORACLE --> WORLD
-  LOOP -. "BLOCKED by AST scan" .-> ORACLE
-```
-
-<br>
-
-Attacked five times during development. **Leaked twice** before it held.
-
-<details>
-<summary><b>How the firewall is enforced</b></summary>
-
-<br>
-
-| layer | blocks |
-|---|---|
-| import scan | `robotsim.oracle`, `robotsim.world`, `harness` |
-| attribute scan | `.oracle`, `.world`, `.sim`, `._bowl_centers`, `get_base_*` |
-| dynamic scan | `__import__`, `eval`, `exec`, `importlib` |
-| call-site scan | ground truth injected as a parameter — `def act(self, oracle)` |
-| `RobotIO` surface | 11 methods, none returning the pose of anything the robot isn't holding |
-
-Every scan carries positive controls, so a detector that stopped detecting fails the build
-rather than passing silently. Both leaks are written up in
-[`IMPROVEMENT_CHANGELOG.md`](IMPROVEMENT_CHANGELOG.md).
-
-</details>
-
-<br>
-
----
-
-<br>
-
 ## Grounded in a 2026 result
 
 **[VoLo: A Physical Orchestrator for Open-Vocabulary Long-Horizon Manipulation](https://arxiv.org/abs/2606.07723)** — NVIDIA, June 2026.
@@ -247,7 +300,7 @@ Origin: [Inner Monologue](https://arxiv.org/abs/2207.05608).
 
 | path | what lives there |
 |---|---|
-| `robotsim/` | world builder, cameras, `RobotIO` blindfold, ground-truth oracle |
+| `robotsim/` | world builder, cameras, `RobotIO` facade, ground-truth oracle |
 | `primitives/` | five primitives, HSV perception, feedback |
 | `agent/` | ReAct loop, memory, one-shot planner, VLM client + replay cache |
 | `harness/` | episode runner, metrics, disturbance hook, report generators |
@@ -259,23 +312,6 @@ Origin: [Inner Monologue](https://arxiv.org/abs/2207.05608).
 **Built here:** everything in the table above. 237 tests.
 
 </details>
-
-<br>
-
----
-
-<br>
-
-## The bug that mattered
-
-The agentic condition scored **0/5** on the disturbance scenario and blamed an unreachable block.
-
-The scene checked out. The trace showed the agent grasping a second block *while still holding
-the first* — dragging the held one out of reach.
-
-**Our primitive was corrupting the world.** The agent had been trying to recover the whole time.
-
-One guard later: **0% → 100%**.
 
 <br>
 
