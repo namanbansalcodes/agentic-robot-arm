@@ -135,9 +135,75 @@ def statement(label, colour, headline, support, page, total, footer):
 
 # -------------------------------------------------------------------------- slides
 
+def bars(d, x, y, w, rows, unit=""):
+    """Horizontal bars. Rows are (label, value, max, colour, caption)."""
+    for i, (label, value, top, colour, caption) in enumerate(rows):
+        yy = y + i * 148
+        d.text((x, yy), label, font=font(30, "bold"), fill=colour)
+        d.rectangle([x, yy + 48, x + w, yy + 92], fill=(28, 33, 41))
+        span = max(int(w * (value / top)), 6)
+        d.rectangle([x, yy + 48, x + span, yy + 92], fill=colour)
+        d.text((x + span + 24, yy + 44), f"{value:g}{unit}", font=mono(40, True), fill=colour)
+        d.text((x, yy + 100), caption, font=font(27), fill=MUTED)
+
+
+def loop_diagram(d, x, y):
+    """One-shot as a straight line, agentic as a cycle. The shape is the argument."""
+    def box(cx, cy, w, h, text, colour, sub=None):
+        d.rectangle([cx, cy, cx + w, cy + h], fill=PANEL, outline=colour, width=2)
+        d.text((cx + w / 2, cy + (h / 2 if not sub else h / 2 - 16)), text,
+               font=font(28, "bold"), fill=FG, anchor="mm")
+        if sub:
+            d.text((cx + w / 2, cy + h / 2 + 20), sub, font=mono(22), fill=DIM, anchor="mm")
+
+    def arrow(x1, y1, x2, y2, colour):
+        d.line([(x1, y1), (x2, y2)], fill=colour, width=3)
+        if x2 > x1:
+            d.polygon([(x2, y2), (x2 - 14, y2 - 8), (x2 - 14, y2 + 8)], fill=colour)
+        elif x2 < x1:
+            d.polygon([(x2, y2), (x2 + 14, y2 - 8), (x2 + 14, y2 + 8)], fill=colour)
+        else:
+            head = 8 if y2 > y1 else -8
+            d.polygon([(x2, y2), (x2 - 8, y2 - head), (x2 + 8, y2 - head)], fill=colour)
+
+    bw, bh, gap = 380, 100, 96
+    d.text((x, y), "ONE-SHOT", font=font(28, "bold"), fill=RED)
+    for i, (label, sub) in enumerate([("plan everything", "1 model call"),
+                                      ("execute every step", "reads nothing"),
+                                      ("report success", "always")]):
+        bx = x + i * (bw + gap)
+        box(bx, y + 48, bw, bh, label, RED, sub)
+        if i:
+            arrow(bx - gap + 12, y + 48 + bh / 2, bx - 12, y + 48 + bh / 2, RED)
+
+    y2 = y + 268
+    d.text((x, y2), "AGENTIC", font=font(28, "bold"), fill=GREEN)
+    for i, (label, sub) in enumerate([("choose ONE action", "1 model call"),
+                                      ("execute it", "one primitive"),
+                                      ("check the result", "L1 · L2 · L3")]):
+        bx = x + i * (bw + gap)
+        box(bx, y2 + 48, bw, bh, label, GREEN, sub)
+        if i:
+            arrow(bx - gap + 12, y2 + 48 + bh / 2, bx - 12, y2 + 48 + bh / 2, GREEN)
+
+    # The return edge is the whole point, so it gets drawn as one continuous path
+    # rather than three segments that have to agree with each other.
+    box_bottom = y2 + 48 + bh
+    lane = box_bottom + 74
+    left_cx = x + bw / 2
+    right_cx = x + 2 * (bw + gap) + bw / 2
+    d.line([(right_cx, box_bottom), (right_cx, lane)], fill=GREEN, width=3)
+    d.line([(right_cx, lane), (left_cx, lane)], fill=GREEN, width=3)
+    d.line([(left_cx, lane), (left_cx, box_bottom + 12)], fill=GREEN, width=3)
+    d.polygon([(left_cx, box_bottom), (left_cx - 9, box_bottom + 18),
+               (left_cx + 9, box_bottom + 18)], fill=GREEN)
+    d.text(((left_cx + right_cx) / 2, lane + 26), "decide again, with what actually happened",
+           font=font(30, "bold"), fill=GREEN, anchor="ma")
+
+
 def build_slides(N):
     one, ag = N["one_shot"], N["agentic"]
-    total = 12
+    total = 17
     foot = f"one-shot vs agentic · {N['episodes']} episodes · replay drift {one['drift'] + ag['drift']}"
     S = []
 
@@ -146,63 +212,105 @@ def build_slides(N):
     d.line([(MARGIN, 150), (MARGIN + 64, 150)], fill=BLUE, width=5)
     d.text((MARGIN, 196), "DEMO", font=font(27, "bold"), fill=BLUE)
     d.text((MARGIN, 380), "The Agentic Arm", font=font(158, "bold"), fill=FG)
-    d.text((MARGIN, 596), "Same robot. Same task. One of them looks.", font=font(50), fill=MUTED)
+    d.text((MARGIN, 596), "Act. Check. Recover. One step at a time.", font=font(50), fill=MUTED)
     d.text((MARGIN, 706), "Franka Panda  ·  PyBullet  ·  Gemini Robotics-ER 2", font=mono(30), fill=DIM)
     d.text((MARGIN, H - 128), foot, font=font(23), fill=DIM)
     S.append(img)
 
     # 2 the job
     S.append(statement("the job", BLUE, "Put every block in the bowl.",
-                       "Three blocks. One bowl. A vision model drives the arm.", 2, total, foot))
+                       "Three blocks. One bowl. A vision model driving the arm.", 2, total, foot))
 
     # 3 robot A
-    S.append(statement("robot a", RED, "Plans it all up front, then closes its eyes.",
-                       "It never reads a single result. Watch what happens.", 3, total, foot))
+    S.append(statement("robot a  ·  one-shot", RED, "Plans every step up front, then executes blind.",
+                       "One model call. It never reads a single result.", 3, total, foot))
 
     # 4 after clip A
     S.append(statement("what just happened", RED, "It left a block on the table.",
-                       "Then it reported the job complete. That is the whole problem.",
-                       4, total, foot))
+                       "Then it reported the job complete.", 4, total, foot))
 
     # 5 robot B
-    S.append(statement("robot b", GREEN, "One action. Look. Then decide again.",
-                       "Same model. Same tools. It just reads what came back.", 5, total, foot))
+    S.append(statement("robot b  ·  agentic", GREEN, "One action. Check the result. Decide again.",
+                       "Same model. Same tools. Same budget.", 5, total, foot))
 
     # 6 after clip B
     S.append(statement("what just happened", GREEN, "It noticed, went back, and finished.",
-                       "The block was taken out of the bowl. It put it back.", 6, total, foot))
+                       "A placed block was removed. It put it back.", 6, total, foot))
 
-    # 7 metric
-    img, d = base(7, total, foot)
-    d.line([(MARGIN, 150), (MARGIN + 64, 150)], fill=AMBER, width=5)
-    d.text((MARGIN, 196), "HOW WE SCORE IT", font=font(27, "bold"), fill=AMBER)
-    d.text((MARGIN, 330), "Honesty gap", font=font(104, "bold"), fill=FG)
-    d.text((MARGIN, 500), "what it SAID  −  what it ACTUALLY did", font=mono(50, True), fill=AMBER)
-    d.text((MARGIN, 640), "A robot that fails is a problem.", font=font(46), fill=MUTED)
-    d.text((MARGIN, 708), "A robot that fails and says it succeeded is a hazard.", font=font(46), fill=MUTED)
+    # 7 the thesis
+    S.append(statement("why blind planning breaks", AMBER,
+                       "A plan written at t=0 cannot see t=5.",
+                       "One early failure silently invalidates every step after it.",
+                       7, total, foot))
+
+    # 8 the loop
+    img, d = base(8, total, foot)
+    d.line([(MARGIN, 130), (MARGIN + 64, 130)], fill=BLUE, width=5)
+    d.text((MARGIN, 172), "THE ONLY DIFFERENCE", font=font(27, "bold"), fill=BLUE)
+    d.text((MARGIN, 232), "One of them closes the loop", font=font(66, "bold"), fill=FG)
+    loop_diagram(d, MARGIN, 356)
     S.append(img)
 
-    # 8 headline numbers
-    img, d = base(8, total, foot)
+    # 9 the three checks
+    img, d = base(9, total, foot)
+    d.line([(MARGIN, 150), (MARGIN + 64, 150)], fill=GREEN, width=5)
+    d.text((MARGIN, 196), "CHECKING, AFTER EVERY ACTION", font=font(27, "bold"), fill=GREEN)
+    d.text((MARGIN, 268), "Three checks, cheapest first", font=font(76, "bold"), fill=FG)
+    for i, (tag, name, cost, detail) in enumerate([
+            ("L1", "Did it error?", "free", "the error string it already got back"),
+            ("L2", "What do the fingers say?", "free", "0.000 m means it closed on empty air"),
+            ("L3", "Does a photo agree?", "1 call", "one yes/no question about a fresh frame")]):
+        y = 442 + i * 150
+        d.rectangle([MARGIN, y, W - MARGIN, y + 128], fill=PANEL)
+        d.text((MARGIN + 34, y + 32), tag, font=mono(50, True), fill=BLUE)
+        d.text((MARGIN + 148, y + 28), name, font=font(44, "bold"), fill=FG)
+        d.text((MARGIN + 148, y + 82), detail, font=font(28), fill=DIM)
+        d.text((W - MARGIN - 34, y + 44), cost, font=mono(36, True),
+               fill=GREEN if cost == "free" else AMBER, anchor="ra")
+    d.text((MARGIN, 900), "The two free checks run first. A photo is only worth buying once they pass.",
+           font=font(34), fill=MUTED)
+    S.append(img)
+
+    # 10 the claim rate
+    S.append(statement("the number that matters", RED,
+                       f"Robot A reported success in all {one['n']} runs.",
+                       "It finished half of them. Its report tracks nothing that happened.",
+                       10, total, foot))
+
+    # 11 results — jobs finished
+    img, d = base(11, total, foot)
     d.line([(MARGIN, 150), (MARGIN + 64, 150)], fill=GREEN, width=5)
     d.text((MARGIN, 196), "THE RESULT", font=font(27, "bold"), fill=GREEN)
-    d.text((MARGIN, 268), f"{one['n']} runs each, scored by ground truth", font=font(62, "bold"), fill=FG)
-    for x, name, dat, colour in ((MARGIN, "ROBOT A  ·  never looks", one, RED),
-                                 (MARGIN + 840, "ROBOT B  ·  looks every step", ag, GREEN)):
-        d.text((x, 430), name, font=font(30, "bold"), fill=colour)
-        d.text((x, 486), f"{dat['wins']} of {dat['n']}", font=font(116, "bold"), fill=colour)
-        d.text((x, 626), "jobs actually finished", font=font(30), fill=MUTED)
-        d.text((x, 720), f"{dat['lies']}", font=font(116, "bold"), fill=colour)
-        d.text((x, 860), "times it claimed a job it had not done", font=font(30), fill=MUTED)
+    d.text((MARGIN, 262), f"{N['episodes']} episodes, scored by ground truth", font=font(66, "bold"), fill=FG)
+    bars(d, MARGIN, 420, 940, [
+        ("ROBOT A  ·  one-shot", one["wins"], one["n"], RED, f"jobs actually finished, out of {one['n']}"),
+        ("ROBOT B  ·  agentic", ag["wins"], ag["n"], GREEN, f"jobs actually finished, out of {ag['n']}"),
+    ])
+    d.text((MARGIN, 760), f"{one['success']:.0%}  →  {ag['success']:.0%}", font=mono(76, True), fill=FG)
+    d.text((MARGIN + 560, 790), "same model, same tools, same budget", font=font(32), fill=MUTED)
     S.append(img)
 
-    # 9 per scene
-    img, d = base(9, total, foot)
+    # 12 results — false successes
+    img, d = base(12, total, foot)
+    d.line([(MARGIN, 150), (MARGIN + 64, 150)], fill=RED, width=5)
+    d.text((MARGIN, 196), "FALSE SUCCESSES", font=font(27, "bold"), fill=RED)
+    d.text((MARGIN, 262), "Claimed done. Ground truth disagreed.", font=font(66, "bold"), fill=FG)
+    bars(d, MARGIN, 420, 940, [
+        ("ROBOT A  ·  one-shot", one["lies"], max(one["lies"], 1), RED, "episodes it claimed but had not done"),
+        ("ROBOT B  ·  agentic", ag["lies"], max(one["lies"], 1), GREEN, "episodes it claimed but had not done"),
+    ])
+    d.text((MARGIN, 760), f"{one['lies']}  →  {ag['lies']}", font=mono(76, True), fill=FG)
+    d.text((MARGIN + 360, 790), "an operator told a job is done when it is not",
+           font=font(32), fill=MUTED)
+    S.append(img)
+
+    # 13 per task
+    img, d = base(13, total, foot)
     d.line([(MARGIN, 150), (MARGIN + 64, 150)], fill=BLUE, width=5)
     d.text((MARGIN, 196), "EVERY TASK", font=font(27, "bold"), fill=BLUE)
-    d.text((MARGIN, 262), "Where looking mattered", font=font(70, "bold"), fill=FG)
-    d.text((MARGIN + 760, 356), "NEVER LOOKS", font=font(26, "bold"), fill=RED)
-    d.text((MARGIN + 1120, 356), "LOOKS", font=font(26, "bold"), fill=GREEN)
+    d.text((MARGIN, 262), "Where the loop earned its keep", font=font(70, "bold"), fill=FG)
+    d.text((MARGIN + 760, 356), "ONE-SHOT", font=font(26, "bold"), fill=RED)
+    d.text((MARGIN + 1120, 356), "AGENTIC", font=font(26, "bold"), fill=GREEN)
     names = {"h1_single": "1 block", "h2_pair": "2 blocks", "h3_triple": "3 blocks",
              "match3": "match 3 colours", "mem_order": "in a given order",
              "mem_swap": "swap two blocks", "mem_recall": "take one back out",
@@ -219,38 +327,53 @@ def build_slides(N):
         y += 58
     S.append(img)
 
-    # 10 the honest loss
+    # 14 the honest loss
     rec = N["per"]["mem_recall"]
-    S.append(statement("the honest loss", AMBER,
-                       "One task beat both of them.",
-                       f"Robot A lied about it {rec['one_shot']['lies']} times. Robot B, never.",
-                       10, total, foot))
+    S.append(statement("the honest loss", AMBER, "One task beat both of them.",
+                       f"Robot A claimed it {rec['one_shot']['lies']} times anyway. Robot B, never once.",
+                       14, total, foot))
 
-    # 11 cost
-    img, d = base(11, total, foot)
+    # 15 what it costs
+    img, d = base(15, total, foot)
     d.line([(MARGIN, 150), (MARGIN + 64, 150)], fill=AMBER, width=5)
-    d.text((MARGIN, 196), "WHAT IT COSTS", font=font(27, "bold"), fill=AMBER)
-    d.text((MARGIN, 268), "Looking is not free", font=font(84, "bold"), fill=FG)
-    for x, val, lab, colour in ((MARGIN, f"{one['calls']:.0f}", "model calls per run · never looks", RED),
-                                (MARGIN + 620, f"{ag['calls']:.0f}", "model calls per run · looks", GREEN),
-                                (MARGIN + 1240, f"{ag['recoveries']:.0f}", "mistakes it caught and fixed", BLUE)):
-        d.text((x, 460), val, font=font(128, "bold"), fill=colour)
-        for i, line in enumerate(wrap(d, lab, font(28), 480)):
-            d.text((x, 620 + i * 38), line, font=font(28), fill=MUTED)
-    d.text((MARGIN, 800),
-           f"All {one['n']} live runs cost ${one['cost']:.2f} for Robot A, ${ag['cost']:.2f} for Robot B.",
-           font=font(42), fill=MUTED)
-    d.text((MARGIN, 864), "Replaying them from the saved answers costs nothing.", font=font(42), fill=MUTED)
+    d.text((MARGIN, 196), "WHAT THE LOOP COSTS", font=font(27, "bold"), fill=AMBER)
+    d.text((MARGIN, 268), "Closing the loop is not free", font=font(76, "bold"), fill=FG)
+    for x, val, lab, colour in ((MARGIN, f"{one['calls']:.0f}", "model calls per run · one-shot", RED),
+                                (MARGIN + 620, f"{ag['calls']:.0f}", "model calls per run · agentic", GREEN),
+                                (MARGIN + 1240, f"{ag['recoveries']:.0f}", "failures it caught and recovered from", BLUE)):
+        d.text((x, 450), val, font=font(128, "bold"), fill=colour)
+        for i, line in enumerate(wrap(d, lab, font(28), 470)):
+            d.text((x, 610 + i * 38), line, font=font(28), fill=MUTED)
+    d.text((MARGIN, 790), f"All {one['n']} live runs cost ${one['cost']:.2f} for Robot A, ${ag['cost']:.2f} for Robot B.",
+           font=font(40), fill=MUTED)
+    d.text((MARGIN, 852), "Replaying them from the saved answers costs nothing.", font=font(40), fill=MUTED)
     S.append(img)
 
-    # 12 reproduce
-    img, d = base(12, total, foot)
+    # 16 grounding
+    img, d = base(16, total, foot)
+    d.line([(MARGIN, 150), (MARGIN + 64, 150)], fill=BLUE, width=5)
+    d.text((MARGIN, 196), "GROUNDED IN A 2026 RESULT", font=font(27, "bold"), fill=BLUE)
+    d.text((MARGIN, 268), "VoLo · NVIDIA · arXiv:2606.07723", font=font(64, "bold"), fill=FG)
+    d.text((MARGIN, 400), 'Its baseline family is literally "single action model,', font=font(42), fill=MUTED)
+    d.text((MARGIN, 456), 'no orchestrator". That is Robot A.', font=font(42), fill=MUTED)
+    d.text((MARGIN, 580), "42.9%  vs  14.3%", font=mono(64, True), fill=DIM)
+    d.text((MARGIN, 660), "their orchestrated agent, on real hardware", font=font(30), fill=DIM)
+    d.text((MARGIN + 900, 580), f"{ag['success']:.0%}  vs  {one['success']:.0%}", font=mono(64, True), fill=FG)
+    d.text((MARGIN + 900, 660), "ours, in a controlled miniature", font=font(30), fill=MUTED)
+    d.text((MARGIN, 800), "We do not reproduce VoLo. That needs their benchmark and their robot.",
+           font=font(36), fill=AMBER)
+    S.append(img)
+
+    # 17 close
+    img, d = base(17, total, foot)
     d.line([(MARGIN, 150), (MARGIN + 64, 150)], fill=GREEN, width=5)
-    d.text((MARGIN, 196), "RUN IT YOURSELF", font=font(27, "bold"), fill=GREEN)
-    d.text((MARGIN, 320), "make judge", font=mono(130, True), fill=FG)
-    d.text((MARGIN, 510), f"All {N['episodes']} runs. Offline. No API key. $0.00.", font=font(52), fill=MUTED)
-    d.text((MARGIN, 596), f"Replay drift: {one['drift'] + ag['drift']}.", font=font(52), fill=GREEN)
-    d.text((MARGIN, 740), "github.com/namanbansalcodes/agentic-robot-arm", font=mono(38), fill=BLUE)
+    d.text((MARGIN, 196), "THE TAKEAWAY", font=font(27, "bold"), fill=GREEN)
+    for i, line in enumerate(["Judge an embodied agent on the", "honesty gap, not the leaderboard."]):
+        d.text((MARGIN, 300 + i * 104), line, font=font(84, "bold"), fill=FG)
+    d.text((MARGIN, 560), "make judge", font=mono(88, True), fill=BLUE)
+    d.text((MARGIN, 700), f"All {N['episodes']} runs. Offline. No API key. $0.00. Replay drift {one['drift'] + ag['drift']}.",
+           font=font(42), fill=MUTED)
+    d.text((MARGIN, 780), "github.com/namanbansalcodes/agentic-robot-arm", font=mono(34), fill=DIM)
     S.append(img)
     return S
 
@@ -362,8 +485,9 @@ def main():
             writer.write(frame)
             n_frames += 1
 
-    holds = {1: 4.0, 2: 4.0, 3: 4.5, 4: 5.0, 5: 4.5, 6: 5.0, 7: 6.5,
-             8: 8.0, 9: 10.0, 10: 5.5, 11: 8.0, 12: 6.5}
+    holds = {1: 4.0, 2: 4.0, 3: 4.5, 4: 5.0, 5: 4.5, 6: 5.0, 7: 5.5, 8: 10.0,
+             9: 9.0, 10: 5.5, 11: 7.5, 12: 7.5, 13: 10.0, 14: 5.5, 15: 8.0,
+             16: 9.0, 17: 8.0}
     # Robot A's clip runs after slide 3, robot B's after slide 5.
     clips = {3: ("disturb_h3", "one_shot", "watch the red block"),
              5: ("disturb_h3", "agentic", "watch the red block")}
