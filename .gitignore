@@ -8,3 +8,7 @@ spike/out/
 .pytest_cache/
 cache_archive_*/
 docs/videos/imgs/
+
+# Rendered demo videos — too large for the repo. They live in docs/demo/ locally
+# and should be uploaded to the submission form / a release, not committed.
+docs/demo/*.mp4
