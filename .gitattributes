@@ -1,0 +1,6 @@
+# Keep generated evidence and cached model responses out of language stats,
+# so GitHub reports this as a Python project rather than an HTML/JSON one.
+docs/evidence/**   linguist-documentation
+docs/videos/**     linguist-documentation
+cache/**           linguist-generated
+results/**         linguist-generated

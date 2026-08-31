@@ -61,11 +61,29 @@ ls results/trajectories/ | grep disturb
 
 ## 6. The GIFs match what the report now says
 
-`docs/videos/*.gif` were recorded before the `grasp()` already-holding fix, which moved
-`disturb_h3` agentic from 0/5 to 100%. Check that the outcome captioned under each GIF in
-`README.md` still agrees with the per-scene table in `results/report.md`. If a GIF now
-disagrees with the eval, either re-record it or relabel it in the README as the earlier
-recorded episode it is — a judge who spots the mismatch unaided will read it as spin.
+`docs/videos/c_*.gif` ship with a `.json` sidecar carrying the episode's claimed/actual
+outcome and its full primitive log. Those sidecars must agree with
+`results/episodes.jsonl` for the same condition/scene/seed. Spot-check the pair the video
+opens on:
+
+```bash
+.venv/bin/python - <<'EOF'
+import json
+for c in ("one_shot", "agentic"):
+    side = json.load(open(f"docs/videos/c_disturb_h3_{c}.json"))
+    ep = next(json.loads(l) for l in open("results/episodes.jsonl")
+              if json.loads(l)["condition"] == c
+              and json.loads(l)["scene_id"] == "disturb_h3"
+              and json.loads(l)["seed"] == side["seed"])
+    ok = (side["claimed"], side["actual"]) == (ep["claimed_success"], ep["actual_success"])
+    print(c, "MATCH" if ok else "MISMATCH", side["claimed"], side["actual"],
+          "vs", ep["claimed_success"], ep["actual_success"])
+EOF
+```
+
+An earlier pair of GIFs was recorded *before* the `grasp()` already-holding fix, when the
+agentic arm still scored 0/5 on `disturb_h3`. If any GIF ever disagrees with the report
+again, re-record it — a judge who spots the mismatch unaided will read it as spin.
 
 ## 7. Screen setup
 
@@ -74,7 +92,7 @@ recorded episode it is — a judge who spots the mismatch unaided will read it a
   at 720p — assume the judge watches in a window, not full screen.
 - Hide notifications, hide the dock, clear the shell of prior scrollback.
 - Have these open in tabs, in script order, before you start:
-  1. `docs/videos/one_shot_small.gif`
+  1. `docs/videos/c_disturb_h3_one_shot.gif`
   2. `agent/baseline.py`
   3. `results/trajectories/agentic_disturb_h3_s0.html`
   4. `tests/test_firewall.py`

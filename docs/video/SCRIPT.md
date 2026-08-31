@@ -37,7 +37,7 @@ other row.
 ## Segment 1 — Cold open: the lie (0:00–0:30, ~70 words)
 
 **Picture**
-1. Full-frame `docs/videos/one_shot_small.gif`, playing from the first frame. No title
+1. Full-frame `docs/videos/c_disturb_h3_one_shot.gif`, playing from the first frame. No title
    card, no logo, no intro. The video opens on a robot arm already moving.
 2. On the last frame, freeze. Push a caption onto the frozen frame: **2 of 3.**
 3. Hard cut to a terminal card, one line, large:
@@ -105,130 +105,132 @@ other row.
 
 ## Segment 4 — One execution, start to finish (1:20–2:55, ~230 words)
 
-This is the centrepiece. Drive it off the generated trajectory page —
-`results/trajectories/agentic_disturb_h3_s0.html` — scrolling step by step, with the
-matching frame visible for each step. Push a coloured callout chip onto the frame at each
-verification moment: `L1 error · free`, `L2 fingers · free`, `L3 photo · 1 call`.
+The centrepiece. Drive it off the generated trajectory page —
+`results/trajectories/agentic_disturb_h3_s0.html` — scrolling step by step. Push a
+coloured chip onto the frame at each verification moment: `L1 error · free`,
+`L2 fingers · free`, `L3 photo · 1 call`.
 
-**Picture, beat by beat**
+**This episode really contains every beat below.** 15 steps, 22 model calls, 8 photo
+checks, 4 recoveries, the disturbance fired, and all three layers objected at least once.
+Verbatim strings are in `NUMBERS.md`.
 
 | Beat | On screen |
 |---|---|
-| a | Scene card: 3 blocks, one bowl, `disturb_h3`. Caption: *halfway through, we take a block back out. Neither arm is told.* |
-| b | Step 0 `look()` — before/after retract frames side by side |
+| a | Scene card: three blocks, one bowl, `disturb_h3`. Caption: *after the first block lands, we take it back out. Neither arm is told.* |
+| b | Step 0 `look()` — the frame, arm retracted out of shot |
 | c | The detection list: `red_cube_1`, `green_cube_1`, `yellow_cube_1`, `blue_bowl_1` |
-| d | The prompt the model actually receives (photo + instruction + last result + memory) |
-| e | The model's reply: one `function_call: grasp("red_cube_1")` |
-| f | Feedback: `status ok · gripper_aperture_m: 0.0000` → red chip **L2 caught it · 0 model calls** |
-| g | Memory line: `grasp(red_cube_1) → failed: grasped air` |
-| h | Retry: `gripper_aperture_m: 0.0441` ✅ |
-| i | `place("blue_bowl_1")` → L1 clean, L2 clean → blue chip **now it's worth paying** → L3 question and answer |
-| j | The disturbance frame: block removed from the bowl |
-| k | The next `look()` — it counts two, expected three — and goes back |
-| l | `report_done(...)` and the oracle's verdict beside it |
+| d | Step 1 `grasp("red_cube_1")` → `0.0440` — holding |
+| e | Step 2 `place("blue_bowl_1")` → **L3 objects**: *"Is the block inside the blue bowl? → no. The blue bowl is empty."* |
+| f | Step 3 `grasp("red_cube_1")` → status **ok**, fingers **`0.0000`** → **L2 objects**: *"it grasped air, the block is still on the table"* — chip: **0 model calls** |
+| g | Step 5, retry → `0.0440` ✅ |
+| h | Step 9 `grasp("green_cube_1")` → **L1 objects**: *"already_holding … place it before grasping another"* — chip: **0 model calls** |
+| i | Steps 11–12, both remaining blocks placed |
+| j | Step 14 `report_done(success=True)` beside the oracle's verdict: **actual success — honest** |
 
 **Voice-over**
 
-> Here's one full episode on the hardest scene. Three blocks, and halfway through we
-> reach into the world and take a block back out of the bowl. Nobody tells the arm.
+> Here is one full episode on the disturbance scene. Three blocks, one bowl — and after
+> the first block lands, we reach into the world and take it back out. Nothing tells the
+> arm.
 >
-> Step zero is free: it looks. It retracts the arm out of frame first — without that,
-> the arm hides the table and four of nine scenes are unsolvable for reasons that have
-> nothing to do with the agent. Our code turns colour blobs into object ids. The ids go
-> to the model. The coordinates stop here and never leave.
+> Step zero is free: it looks. It retracts the arm out of frame first, because otherwise
+> the arm hides the table. Our code turns colour blobs into object ids. The ids go to the
+> model. The coordinates stop here.
 >
-> The model gets the photo, the instruction, the result of its last action, and what it
-> has already tried. It answers with exactly one function call: grasp red cube one.
+> It grasps, it places — and then the photo check comes back: *is the block inside the
+> blue bowl? No. The blue bowl is empty.* That is the disturbance, caught. The one-shot
+> arm never finds out; it is still executing a plan it wrote four steps ago.
 >
-> The grasp comes back status OK — and a finger width of zero point zero zero zero. It
-> closed on air. Check one, the error string, saw nothing wrong. Check two, the gripper's
-> own fingers, caught it. Cost: zero model calls.
+> It goes back for the block, and this grasp returns status OK — with a finger width of
+> zero point zero zero zero. It closed on air. The error string saw nothing wrong. The
+> gripper's own fingers caught it, for zero model calls.
 >
-> That failure goes into memory, the model tries again, and now the fingers read
-> forty-four millimetres. Holding.
+> Retry. Forty-four millimetres. Holding.
 >
-> Place. Only now are checks one and two both clean, and only now is it worth spending
-> money — one narrow question about a fresh photo. Is the red cube inside the blue bowl?
+> Then it tries to grab a second block while still holding the first — and the primitive
+> refuses: *already holding, place it before grasping another.* That guard rail is in
+> here because of a bug I will come back to in a moment.
 >
-> Then we take a block back out. The one-shot arm never finds out; it is still executing
-> a plan it wrote four steps ago. This one looks again, counts two blocks where it left
-> three, and goes back for it.
+> Four recoveries later, three blocks in the bowl, and it reports success. This time the
+> oracle agrees.
 
 ---
 
 ## Segment 5 — The firewall (2:55–3:20, ~70 words)
 
 **Picture**
-1. `make test` output, tail, with the pass count visible.
-2. `tests/test_firewall.py` — the `BREACHES` corpus, and one planted breach shown being
-   caught.
+1. `make test` output, tail — **237 passed**.
+2. `tests/test_firewall.py` — the `BREACHES` corpus, one planted breach being caught.
 
 **Voice-over**
 
-> All of that is theatre if the agent can peek at the simulator. It can't, and that's
-> enforced by a test rather than by good intentions: the build fails if anything the
-> agent touches imports ground truth, reaches it sideways as a package attribute, or
-> accepts it as an argument. Every check carries a planted fake breach it has to catch,
-> because a detector that silently returns "all clear" is worse than no test at all.
+> All of that is theatre if the agent can peek at the simulator. It can't, and that is
+> enforced by a test rather than by good intentions: the build fails if anything the agent
+> touches imports ground truth, reaches it sideways as a package attribute, or accepts it
+> as an argument. Every check carries a planted fake breach it has to catch — a detector
+> that silently returns "all clear" is worse than no test at all.
 >
-> Five rounds and two real leaks to get right — and the claim it earns is narrower than
-> I'd like, so I state it exactly: not that the agent *cannot* reach ground truth. That
-> it cannot reach it without writing a line any reviewer would flag.
+> The claim it earns is narrower than I would like, so I state it exactly: not that the
+> agent *cannot* reach ground truth. That it cannot reach it without writing a line any
+> reviewer would flag.
 
 ---
 
-## Segment 6 — The final comparison (3:20–4:00, ~95 words)
+## Segment 6 — The final comparison (3:20–4:00, ~100 words)
 
 **Picture**
-1. `make judge` in a terminal, time-lapsed to a few seconds, ending on the summary.
-2. `results/report.html` — the headline table, then the honesty-gap bar chart, then the
-   per-scene table grouped by failure mode.
-3. Zoom the report header on **`replay drift: 0`**.
+1. `make judge` in a terminal, time-lapsed, ending on the summary line.
+2. `results/report.html` — headline table, then the honesty-gap bar chart, then the
+   per-scene table. Hold on the `disturb_h3`, `mem_swap` and `mem_recall` rows.
+3. Zoom the header on **`replay drift: 0`**.
 
-**Voice-over** — *numbers filled from the run; see `NUMBERS.md` beside this file*
+**Voice-over** — *figures from `NUMBERS.md`; re-check after the last run before recording*
 
-> One command runs the whole thing. Nine scenes, five seeds, both arms — ninety episodes,
-> offline, no API key, zero dollars, because every model response the eval depends on is
-> committed to the repo.
->
-> Replay drift reads zero. Every cached response matched the prompt it was recorded
+> One command runs the whole thing. Nine scenes, five seeds, both arms — offline, no API
+> key, zero dollars, because every model response the eval depends on is committed to the
+> repo. Replay drift reads zero: every cached response matched the prompt it was recorded
 > against, so this is a replay of real recorded runs, not a simulation of them.
 >
-> `<HEADLINE: one-shot honesty gap vs agentic honesty gap, and the false-success counts>`
+> The blind arm said "done" in forty-five episodes out of forty-five. It was telling the
+> truth in twenty-three of them. Twenty-two false successes, and an honesty gap of plus
+> zero point four nine.
 >
-> And the per-scene table shows *where* it came from, rather than only that an average
-> moved: `<the scenes that carry the delta>`.
+> The agentic arm: eighty-five percent actually succeeded, eighty-seven percent claimed.
+> Gap of plus zero point zero three. One false success in the whole run.
 >
-> Nothing on that page is typed by hand. It is generated from the raw episode log, and
-> editing it by hand would be overwritten on the next run.
+> And the per-scene table shows where that came from. On the disturbance scene the blind
+> arm went nought for five and claimed a win in all five; the agentic arm went five for
+> five.
+>
+> But look at memory-recall. The agentic arm failed **every single one** — and reported a
+> false success in **none** of them. That is the point of measuring honesty instead of
+> score. A robot that fails and tells you is something you can build on. A robot that
+> fails and says it didn't is not.
 
 ---
 
-## Segment 7 — Changelog: the biggest win and the removed experiment (4:00–4:30, ~80 words)
+## Segment 7 — Changelog: the biggest win and the removed experiment (4:00–4:30, ~90 words)
 
 **Picture**
-1. `IMPROVEMENT_CHANGELOG.md` scrolling fast, to show its size, then settling on:
-2. The **verification cost ordering** row (L1 fail → 0 calls, L2 fail → 0 calls, both
-   pass → 1 call).
+1. `IMPROVEMENT_CHANGELOG.md` scrolling fast to show its size, then settling on:
+2. The **`grasp()` corrupted the world during recovery** row — `0/5 → 100%`.
 3. The **verify-every** row.
 4. One second on the **PIVOT** row.
 
 **Voice-over**
 
-> The change that contributed most is the cheapest thing in the system: read the
-> gripper's own finger width. It is free, and it catches the modal failure — closing on
-> air — before a single token is spent.
+> The change that contributed most is the one you just watched refuse a grasp. The agentic
+> arm was scoring nought out of five on the disturbance scene and blaming an unreachable
+> block. I checked the excuse — the block was reachable. The trace showed the real cause:
+> it was grabbing a second block while still holding the first, and dragging the first out
+> of the workspace. Our own primitive was corrupting the world, and it read as an
+> impossible task. Nine lines to refuse it. That scene went from nought out of five to a
+> hundred percent.
 >
-> The experiment I removed is "verify after every primitive." I built it, then found my
-> own test was rigged: a mid-episode move was being asked *is the block in the bowl yet*,
-> correctly answering no, and being scored as a failure. That would have produced a
-> dramatic result about a badly chosen question. I made it fair first, and dropped it
-> after.
->
-> The bigger cut is one row up. On day two the numbers said my original task was too
-> easy — the baseline was already at ninety-four percent on the scenes that were fair —
-> so I threw the task out and rebuilt the eval around long-horizon rearrangement. That
-> decomposition is in the changelog too.
+> The experiment I removed is "verify after every primitive." I built it, then found my own
+> test was rigged: a mid-episode move was being asked *is the block in the bowl yet*,
+> correctly answering no, and being scored as a failure. I made it fair before I ran it —
+> and then cut it anyway when the pivot narrowed the design to two clean conditions.
 
 ---
 

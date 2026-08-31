@@ -68,6 +68,10 @@ make judge
 Runs `make test`, then the **entire eval** (2 conditions × 9 scenes × 5 seeds = 90
 episodes) against the committed replay cache, then regenerates the report.
 
+`make judge` exits non-zero on a cache miss and prints which key was missing. Replay
+never silently falls back to a live call, because a run that quietly reached the network
+would not be the reproducible run this page promises.
+
 - **No `GEMINI_API_KEY` required.** No network access required.
 - **Cost: $0.00.** The dollar figures in the report are what the *recording* run cost.
 - Outputs: `results/report.md`, `results/report.html`, `results/episodes.jsonl`,
@@ -106,11 +110,21 @@ make spike       # the original feasibility proof: headless sim, scripted grasp,
 
 ## Measured runtime and cost
 
+Measured on the platform in the table at the top of this file (Apple Silicon, CPython
+3.11.6). Wall clock is dominated by PyBullet, not by the model — see the note below.
+
 | run | wall clock | cost | needs a key |
 |---|---|---|---|
-| `make test` | RUNTIME_TESTS | $0 | no |
-| `make judge` (replay, 90 episodes) | RUNTIME_JUDGE | **$0** | **no** |
-| the original recording run (live) | — | RECORDED_COST | yes |
+| `make test` (237 tests) | **5 min 45 s** | $0 | no |
+| `make judge` (tests + replay + report) | **~40 min** | **$0.00** | **no** |
+| &nbsp;&nbsp;— of which: the replay itself | ~34 min | $0.00 | no |
+| the original live recording run | — | **$4.89** | yes |
+
+The $4.89 is what it cost to *record* the cache once. It is the sum of the per-episode
+`cost_usd` column in `results/episodes.jsonl`, split $0.56 one-shot / $4.33 agentic —
+the agentic arm calls the model ~17 times per episode where the one-shot arm calls it
+once, which is the price of the loop and is reported rather than hidden. Replaying that
+cache costs nothing and needs no key.
 
 Nearly all of the replay wall clock is PyBullet stepping physics and rasterising frames,
 not model latency: replay re-executes every trajectory in the simulator for real and

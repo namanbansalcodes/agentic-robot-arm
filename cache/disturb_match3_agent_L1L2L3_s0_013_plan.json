@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "d74cda70d455db9f",
+  "response": {
+    "input_tokens": 2626,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 307,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "All three blocks (red, green, and yellow) have been successfully grasped and placed into their matching-coloured bowls.",
+          "success": true
+        },
+        "id": "call_1352262",
+        "name": "report_done"
+      }
+    ]
+  }
+}
