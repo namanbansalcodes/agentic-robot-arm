@@ -263,7 +263,7 @@ def slide_loop(spec, idx, total):
     """The two conditions as two columns of boxes: the whole experiment in one picture."""
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
-    heading(d, spec, head_size=76)
+    heading(d, spec, head_size=68)
 
     columns = [
         (200, RED, "one_shot", ["look()", "ONE model call:\nemit the entire plan",
@@ -274,16 +274,16 @@ def slide_loop(spec, idx, total):
                                   "task complete?  no -> back up"]),
     ]
     for x, colour, name, boxes in columns:
-        d.text((x, 470), name, font=mono(34, "bold"), fill=colour)
-        y = 520
+        d.text((x, 408), name, font=mono(34, "bold"), fill=colour)
+        y = 462
         for text in boxes:
             lines = text.split("\n")
-            height = 30 + 40 * len(lines)
+            height = 28 + 38 * len(lines)
             panel(d, x, y, x + 640, y + height, colour)
             for i, line in enumerate(lines):
-                d.text((x + 30, y + 16 + 40 * i), line, font=font(30), fill=FG)
-            y += height + 34
-    d.text((1080 + 660, 520 + 6), "loop", font=font(26, "bold"), fill=GREEN)
+                d.text((x + 30, y + 14 + 38 * i), line, font=font(30), fill=FG)
+            y += height + 24
+    d.text((1080 + 660, 468), "loop", font=font(26, "bold"), fill=GREEN)
     chrome(d, idx, total, spec["accent"])
     return img
 
@@ -293,9 +293,9 @@ def _table(d, rows, top, cols, accent_rows):
     header, *body = rows
     for x, cell in zip(cols, header):
         d.text((x, y), cell, font=font(32, "bold"), fill=DIM)
-    y += 58
+    y += 54
     d.rectangle([120, y, 1800, y + 2], fill=(34, 39, 47))
-    y += 34
+    y += 30
     for row in body:
         emphasis = row[0] in accent_rows
         for i, (x, cell) in enumerate(zip(cols, row)):
@@ -308,7 +308,7 @@ def _table(d, rows, top, cols, accent_rows):
             elif i == 0:
                 colour = MUTED
             d.text((x, y), cell, font=fnt, fill=colour)
-        y += 74
+        y += 70
     return y
 
 
@@ -316,7 +316,7 @@ def slide_headline(spec, idx, total):
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
     heading(d, spec, head_size=72)
-    _table(d, HEADLINE, 470, [120, 900, 1400],
+    _table(d, HEADLINE, 440, [120, 900, 1400],
            {"honesty gap", "false successes", "said it succeeded"})
     chrome(d, idx, total, BLUE)
     return img
@@ -326,7 +326,7 @@ def slide_scenes(spec, idx, total):
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
     heading(d, spec, head_size=72)
-    _table(d, SCENES, 480, [120, 900, 1400],
+    _table(d, SCENES, 470, [120, 900, 1400],
            {"disturb_h3", "disturb_match3", "mem_swap", "mem_recall"})
     chrome(d, idx, total, BLUE)
     return img
