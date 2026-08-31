@@ -201,13 +201,13 @@ def build_slides(N):
     d.line([(MARGIN, 150), (MARGIN + 64, 150)], fill=BLUE, width=5)
     d.text((MARGIN, 196), "EVERY TASK", font=font(27, "bold"), fill=BLUE)
     d.text((MARGIN, 262), "Where looking mattered", font=font(70, "bold"), fill=FG)
-    d.text((MARGIN + 760, 386), "NEVER LOOKS", font=font(26, "bold"), fill=RED)
-    d.text((MARGIN + 1120, 386), "LOOKS", font=font(26, "bold"), fill=GREEN)
+    d.text((MARGIN + 760, 356), "NEVER LOOKS", font=font(26, "bold"), fill=RED)
+    d.text((MARGIN + 1120, 356), "LOOKS", font=font(26, "bold"), fill=GREEN)
     names = {"h1_single": "1 block", "h2_pair": "2 blocks", "h3_triple": "3 blocks",
              "match3": "match 3 colours", "mem_order": "in a given order",
              "mem_swap": "swap two blocks", "mem_recall": "take one back out",
              "disturb_h3": "3 blocks, one removed", "disturb_match3": "match 3, one removed"}
-    y = 436
+    y = 404
     for s in N["scenes"]:
         o, a = N["per"][s]["one_shot"], N["per"][s]["agentic"]
         d.text((MARGIN, y), names[s], font=font(34), fill=FG)
@@ -216,7 +216,7 @@ def build_slides(N):
             d.text((x, y), f"{dat['wins']}/5", font=mono(34, True), fill=colour)
             if dat["lies"]:
                 d.text((x + 100, y + 6), f"{dat['lies']} false", font=mono(24), fill=RED)
-        y += 62
+        y += 58
     S.append(img)
 
     # 10 the honest loss
@@ -237,9 +237,10 @@ def build_slides(N):
         d.text((x, 460), val, font=font(128, "bold"), fill=colour)
         for i, line in enumerate(wrap(d, lab, font(28), 480)):
             d.text((x, 620 + i * 38), line, font=font(28), fill=MUTED)
-    d.text((MARGIN, 800), f"The whole eval cost ${one['cost']:.2f} against ${ag['cost']:.2f} to run live.",
+    d.text((MARGIN, 800),
+           f"All {one['n']} live runs cost ${one['cost']:.2f} for Robot A, ${ag['cost']:.2f} for Robot B.",
            font=font(42), fill=MUTED)
-    d.text((MARGIN, 864), "Replaying it from the saved answers costs nothing.", font=font(42), fill=MUTED)
+    d.text((MARGIN, 864), "Replaying them from the saved answers costs nothing.", font=font(42), fill=MUTED)
     S.append(img)
 
     # 12 reproduce
