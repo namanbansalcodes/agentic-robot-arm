@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "5609d51083463393",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 131,
+    "text": "yes\nThe yellow block is located inside the yellow bowl.",
+    "tool_calls": []
+  }
+}

@@ -115,13 +115,13 @@ Measured on the platform in the table at the top of this file (Apple Silicon, CP
 
 | run | wall clock | cost | needs a key |
 |---|---|---|---|
-| `make test` (237 tests) | **5 min 45 s** | $0 | no |
-| `make judge` (tests + replay + report) | **~40 min** | **$0.00** | **no** |
-| &nbsp;&nbsp;— of which: the replay itself | ~34 min | $0.00 | no |
-| the original live recording run | — | **$4.89** | yes |
+| `make test` (237 tests) | **~5.5 min** | $0 | no |
+| `make judge` (tests + replay + report) | **~41 min** | **$0.00** | **no** |
+| &nbsp;&nbsp;— of which: the replay itself | ~35 min | $0.00 | no |
+| the original live recording run | — | **$5.61** | yes |
 
-The $4.89 is what it cost to *record* the cache once. It is the sum of the per-episode
-`cost_usd` column in `results/episodes.jsonl`, split $0.56 one-shot / $4.33 agentic —
+The $5.61 is what it cost to *record* the cache once. It is the sum of the per-episode
+`cost_usd` column in `results/episodes.jsonl`, split $0.56 one-shot / $5.05 agentic —
 the agentic arm calls the model ~17 times per episode where the one-shot arm calls it
 once, which is the price of the loop and is reported rather than hidden. Replaying that
 cache costs nothing and needs no key.
