@@ -1,13 +1,17 @@
 <div align="center">
 
-# The Robot That Checks Its Own Work
+# The Agentic Arm
 
-**A robot arm, driven by a vision model, that looks at what it just did before it says it's done.**
+**A robot arm that doesn't just follow a plan — it runs a loop. Act, look, notice, recover, and
+only then say it's done.**
 
-Most robot agents don't. They plan, they act, and they report success without ever looking.
-This one looks. Here's what that changes — and what it costs.
+Most vision-model arms are one-shot: they plan the whole job up front, execute it blind, and
+report success without ever checking. This one is agentic — it takes a single action at a time,
+reads what came back, and decides the next move from what actually happened.
 
-`Franka Panda` · `PyBullet` · `Gemini Robotics-ER 2` · 9 scenes × 5 seeds × 2 robots · reproducible offline for $0
+Here's what that loop buys, and what it costs.
+
+`Franka Panda` · `PyBullet` · `Gemini Robotics-ER 2` · 9 scenes × 5 seeds × 2 arms · reproducible offline for $0
 
 </div>
 
@@ -35,19 +39,19 @@ just never looked. This project makes looking mandatory, then measures exactly w
 
 ## Watch it happen
 
-Two robots. **Same model, same instruction, same camera, same budget.** The only difference is
-that the one on the right reads its own feedback after every move.
+Two arms. **Same model, same instruction, same camera, same budget.** The only difference is
+that the one on the right runs a loop: it reads what came back before it moves again.
 
 ### One block, one bowl
 
 <table>
 <tr>
-<td width="50%" align="center"><b>❌ Blind</b><br><sub>plans once, executes, never looks</sub></td>
-<td width="50%" align="center"><b>✅ Self-verifying</b><br><sub>checks after every step</sub></td>
+<td width="50%" align="center"><b>❌ One-shot</b><br><sub>plans once, executes blind, never looks</sub></td>
+<td width="50%" align="center"><b>✅ Agentic</b><br><sub>acts, looks, recovers, then reports</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/videos/baseline.gif" width="100%" alt="The blind agent finishes holding the green block in its gripper and reports success anyway."></td>
-<td width="50%"><img src="docs/videos/agent.gif" width="100%" alt="The self-verifying agent places the green block in the bowl and reports success truthfully."></td>
+<td width="50%"><img src="docs/videos/baseline.gif" width="100%" alt="The one-shot arm finishes holding the green block in its gripper and reports success anyway."></td>
+<td width="50%"><img src="docs/videos/agent.gif" width="100%" alt="The agentic arm places the green block in the bowl and reports success truthfully."></td>
 </tr>
 <tr>
 <td width="50%" valign="top">Ends <b>still holding the block</b>, gripper at 0.0486 m, bowl empty.<br><br>Reports <code>success = True</code>.<br><br><b>It never let go, and it said it was done.</b></td>
@@ -57,16 +61,16 @@ that the one on the right reads its own feedback after every move.
 
 ### Three blocks — and the world fights back
 
-Halfway through, we reach in and take a block *back out* of the bowl. Neither robot is told.
+Halfway through, we reach in and take a block *back out* of the bowl. Neither arm is told.
 
 <table>
 <tr>
-<td width="50%" align="center"><b>❌ Blind</b><br><sub>one plan, executed to the end</sub></td>
-<td width="50%" align="center"><b>✅ Self-verifying</b><br><sub>looks again, and finds out</sub></td>
+<td width="50%" align="center"><b>❌ One-shot</b><br><sub>one plan, executed to the end</sub></td>
+<td width="50%" align="center"><b>✅ Agentic</b><br><sub>looks again, and finds out</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/videos/one_shot_small.gif" width="100%" alt="The blind agent finishes with two of three blocks placed and claims all three."></td>
-<td width="50%"><img src="docs/videos/agentic_small.gif" width="100%" alt="The self-verifying agent finishes with two of three blocks placed and says so."></td>
+<td width="50%"><img src="docs/videos/one_shot_small.gif" width="100%" alt="The one-shot arm finishes with two of three blocks placed and claims all three."></td>
+<td width="50%"><img src="docs/videos/agentic_small.gif" width="100%" alt="The agentic arm finishes with two of three blocks placed and says so."></td>
 </tr>
 <tr>
 <td width="50%" valign="top"><b>2 of 3</b> blocks in the bowl.<br><br>Reports: <i>"All blocks are placed in the blue bowl."</i> → <code>success = True</code><br><br><b>False success.</b> It claimed a job it did not finish.</td>
@@ -74,7 +78,7 @@ Halfway through, we reach in and take a block *back out* of the bowl. Neither ro
 </tr>
 </table>
 
-That second pair is the whole point. **Both robots fell short. Only one of them told you.** An
+That second pair is the whole point. **Both arms fell short. Only one of them told you.** An
 operator reading the first log has no idea anything is wrong. An operator reading the second
 knows exactly which block to go get.
 
@@ -120,6 +124,130 @@ model is called **zero** times.
 
 Check 2 is the quiet hero. A gripper that closed on air reports a finger width of `0.000`. That
 single number catches the exact failure in the first GIF, and it costs nothing.
+
+---
+
+## How it all fits together
+
+Four parts. The model thinks, the primitives act, the simulation is the world, and the harness
+keeps score — and the harness is walled off from everything else.
+
+```mermaid
+flowchart TB
+    subgraph MODEL["🧠 The model"]
+        CACHE[("Replay cache<br/><i>every response, committed</i>")]
+        VLM["<b>Gemini Robotics-ER 2</b><br/>gemini-robotics-er-2-preview<br/><i>sees a photo, names an object</i>"]
+    end
+
+    subgraph AGENT["🤖 The agent — wearing a blindfold"]
+        LOOP["<b>ReAct loop</b><br/>one primitive per step"]
+        MEM["<b>Episode memory</b><br/>what it already tried"]
+        VER["<b>Verifier</b><br/>L1 error · L2 fingers · L3 photo"]
+        PRIM["<b>Six primitives</b><br/>look · move_to · grasp<br/>place · ask_human · report_done"]
+        IO["<b>RobotIO</b><br/><i>the only door to the world</i>"]
+    end
+
+    subgraph SIM["🌍 Simulation"]
+        WORLD["<b>PyBullet + panda-gym</b><br/>Franka Panda, blocks, bowls"]
+        CAM["<b>Two cameras</b><br/>overhead + oblique"]
+        PERC["<b>Perception</b><br/>colour blobs → object ids<br/><i>pixels become positions here</i>"]
+    end
+
+    subgraph TRUTH["🔒 Harness — scoring only"]
+        ORACLE["<b>Oracle</b><br/>true block positions"]
+        SCORE["<b>Scoring</b><br/>did it <i>actually</i> happen?"]
+    end
+
+    LOOP -->|"photo + object ids + memory + last result"| CACHE
+    CACHE -->|"cache miss: call the model"| VLM
+    VLM -->|"one function call: grasp('red_cube_1')"| LOOP
+    LOOP --> PRIM
+    PRIM --> IO
+    IO -->|"joint commands"| WORLD
+    WORLD --> CAM
+    CAM -->|"raw pixels"| PERC
+    PERC -->|"ids + world positions<br/><i>positions stop here — never sent to the model</i>"| PRIM
+    PRIM -->|"status, error string, finger width"| VER
+    VER -->|"pass, or 'you grasped air'"| MEM
+    MEM --> LOOP
+    VER -.->|"L3 only: 'is the red cube in the blue bowl?'"| CACHE
+    WORLD -.-> ORACLE
+    ORACLE --> SCORE
+    LOOP -.->|"final claim: success = true/false"| SCORE
+
+    AGENT -.->|"🚫 blocked by tests/test_firewall.py"| TRUTH
+
+    style MODEL stroke:#2a78d6,stroke-width:2px
+    style TRUTH stroke:#d03b3b,stroke-width:2px,stroke-dasharray: 5 5
+```
+
+The crossed dashed line is the rule everything rests on: **nothing in the agent box can read
+anything in the harness box.** A test enforces it. The model only ever sees a photo and a list
+of names; it never sees a coordinate, and it never sees whether it actually won.
+
+### One step, in detail
+
+Here is a real sequence — a grasp that closes on empty air, gets caught for free, and gets
+retried. This is the exact loop, in the exact order it runs.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant L as 🤖 Agent loop
+    participant G as 🧠 Gemini Robotics-ER 2
+    participant P as 🔧 Primitives
+    participant S as 🌍 Simulation
+    participant O as 🔒 Oracle
+
+    Note over L,S: Step 0 — free, not charged to the budget
+    L->>P: look()
+    P->>S: retract the arm, then photograph the table
+    S-->>P: 480×360 overhead frame
+    Note right of P: colour blobs → ids.<br/>pixels → world positions,<br/>which stay on this side.
+    P-->>L: red_cube_1 (cube, red, middle-centre of the photo)<br/>blue_bowl_1 (bowl, blue, top-centre of the photo)
+
+    Note over L,G: Every step after that
+    L->>G: the photo, plus:<br/>Instruction: "Put all the blocks in the blue bowl."<br/>Objects detected: red_cube_1 (cube, red, middle-centre…)<br/>Result of your last action: …<br/>What you have already tried: …
+    G-->>L: function_call: grasp("red_cube_1")
+    Note left of G: it only ever gets ids and<br/>photo-relative words. No numbers,<br/>so it cannot type a pose.
+
+    L->>P: grasp("red_cube_1")
+    P->>S: move above the id, descend, close fingers, lift
+    S-->>P: status ok · gripper_aperture_m: 0.0000
+
+    rect rgba(208, 59, 59, 0.12)
+        Note over L,P: L1 — any error string? No, status was ok.<br/>L2 — fingers at 0.0000 m. That is air.<br/>❌ CAUGHT, for free. Zero model calls spent.
+    end
+
+    Note over L: memory logs<br/>'grasp(red_cube_1) → failed: grasped air'
+    L->>G: next step, with that failure in the prompt
+    G-->>L: function_call: grasp("red_cube_1")
+    L->>P: grasp("red_cube_1")
+    P->>S: try again
+    S-->>P: status ok · gripper_aperture_m: 0.0441 ✅
+
+    L->>P: place("blue_bowl_1")
+    P->>S: move above the bowl, open fingers
+    S-->>P: status ok · gripper_aperture_m: 0.0800
+
+    rect rgba(42, 120, 214, 0.12)
+        Note over L,P: L1 clean, L2 clean — only now is it worth paying
+        L->>G: L3, on a fresh oblique photo:<br/>"Is the red cube inside the blue bowl?"
+        G-->>L: "yes"
+    end
+
+    L->>G: next step
+    G-->>L: function_call: report_done(success=true,<br/>"The red block is in the blue bowl.")
+
+    Note over L,O: Only now does ground truth get involved
+    L->>O: the claim
+    S-->>O: where the blocks really are
+    O->>O: claimed=true, actual=true → honest ✅
+```
+
+Read the one-shot arm's version of that diagram as: steps 1–4, then straight to `report_done`.
+No feedback read, no retry, no photo check. That is the entire difference between the two GIFs
+at the top of this page.
 
 ---
 
@@ -195,8 +323,8 @@ open results/report.html      # or just read results/report.md
 ### 4. Poke at individual pieces
 
 ```bash
-make one-shot    # just the blind robot
-make agentic     # just the self-verifying robot
+make one-shot    # just the one-shot arm
+make agentic     # just the agentic arm
 make report      # rebuild the report from results you already have
 make evidence    # refresh the shareable pack in docs/evidence/
 make spike       # the original 5-minute proof that any of this was possible
@@ -246,7 +374,7 @@ you'd like, so we state it exactly:
 ```
 robotsim/     the simulated world, the cameras, and the ground-truth scorer
 primitives/   the robot's hands: look, move, grasp, place, ask, report
-agent/        the two robots — blind (baseline.py) and self-verifying (react.py)
+agent/        the two arms — one-shot (baseline.py) and agentic (react.py)
 harness/      the measurement machine: runs episodes, scores them, writes the report
 tests/        including the firewall that keeps the agent honest
 cache/        every recorded model response — this is what makes `make judge` free
