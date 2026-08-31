@@ -1,0 +1,18 @@
+{
+  "prompt_hash": "df0c86332ebeffdc",
+  "response": {
+    "input_tokens": 2669,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 1911,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "question": "Which block (red, green, or yellow) was already in the bowl when the task started?"
+        },
+        "id": "call_1855764",
+        "name": "ask_human"
+      }
+    ]
+  }
+}

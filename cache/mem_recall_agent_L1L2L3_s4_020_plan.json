@@ -1,0 +1,18 @@
+{
+  "prompt_hash": "d9156779450f9532",
+  "response": {
+    "input_tokens": 2749,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 1307,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "question": "Both the red and green cubes were in the bowl when we started. Which one should I take out and leave on the table?"
+        },
+        "id": "call_876129",
+        "name": "ask_human"
+      }
+    ]
+  }
+}

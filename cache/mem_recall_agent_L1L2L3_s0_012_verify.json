@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "281f2aeb5a4a341a",
+  "response": {
+    "input_tokens": 1143,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 206,
+    "text": "no\nThe yellow cube is a solid block, not a container.",
+    "tool_calls": []
+  }
+}

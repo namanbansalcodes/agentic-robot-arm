@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "a70c829752bbeb72",
+  "response": {
+    "input_tokens": 2555,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 459,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "All three blocks (red, green, yellow) have been successfully grasped and placed in their respective matching bowls, which are shown in the photo. No blocks remain on the table.",
+          "success": true
+        },
+        "id": "call_1746649",
+        "name": "report_done"
+      }
+    ]
+  }
+}

@@ -1,17 +1,15 @@
 {
-  "prompt_hash": "83317d643194b881",
+  "prompt_hash": "ec2f6784c6928ff4",
   "response": {
-    "input_tokens": 2666,
+    "input_tokens": 2757,
     "model": "gemini-robotics-er-2-preview",
-    "output_tokens": 1225,
+    "output_tokens": 152,
     "text": "",
     "tool_calls": [
       {
-        "args": {
-          "question": "Which block should I take out of the bowl and leave on the table (green or yellow)?"
-        },
-        "id": "call_1644606",
-        "name": "ask_human"
+        "args": {},
+        "id": "call_1391195",
+        "name": "look"
       }
     ]
   }

@@ -1,0 +1,10 @@
+{
+  "prompt_hash": "b6d70fbcfcb27c46",
+  "response": {
+    "input_tokens": 1150,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 36,
+    "text": "yes\nThe robot arm is holding the green block high above the table surface.",
+    "tool_calls": []
+  }
+}

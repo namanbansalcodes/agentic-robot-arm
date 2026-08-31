@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "490c87b41777d339",
+  "response": {
+    "input_tokens": 2638,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 1125,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "All blocks have been placed in the blue bowl in the specified order: red first, then green, then yellow.",
+          "success": true
+        },
+        "id": "call_1495401",
+        "name": "report_done"
+      }
+    ]
+  }
+}

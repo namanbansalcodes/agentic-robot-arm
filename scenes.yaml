@@ -35,6 +35,12 @@ defaults:
   max_retries_per_subtask: 3
 
 scenes:
+  # NOTE: h4_quad (4 blocks, blue bowl) was REMOVED. It paired a blue cube with a
+  # blue bowl; held near the overhead camera the cube's blob exceeds the 5,000 px
+  # bowl threshold, is classified as a bowl, and steals the `blue_bowl_1` id --
+  # leaving the real bowl unnameable for BOTH conditions. A perfect scripted policy
+  # fails it too, so it measured our perception, not the agent. Any new scene must
+  # avoid giving a cube the same colour as a bowl it shares a frame with.
   # --- horizon ladder: one instruction, one bowl, 1 -> 4 blocks -----------------
   # The block set is nested (h1 subset h2 subset h3 subset h4) and the bowl never
   # moves, so horizon length is the ONLY thing that changes down this ladder.
@@ -80,27 +86,6 @@ scenes:
   # A blue cube alongside a blue bowl is fine and deliberate: the detector's id
   # counter is keyed on colour AND kind, so these read as blue_cube_1 / blue_bowl_1
   # and the ~7x area margin between a cube and a bowl is what tells them apart.
-  - id: h4_quad
-    failure_mode: horizon_4
-    instruction: "Put all the blocks in the blue bowl."
-    objects:
-      - {name: red_cube, kind: cube, color: red, position: [0.10, -0.16]}
-      - {name: green_cube, kind: cube, color: green, position: [-0.02, -0.16]}
-      - {name: yellow_cube, kind: cube, color: yellow, position: [-0.14, -0.16]}
-      - {name: blue_cube, kind: cube, color: blue, position: [0.10, -0.04]}
-      - {name: blue_bowl, kind: bowl, color: blue, position: [-0.02, 0.16]}
-    success:
-      type: pairs
-      pairs:
-        - [red_cube, blue_bowl]
-        - [green_cube, blue_bowl]
-        - [yellow_cube, blue_bowl]
-        - [blue_cube, blue_bowl]
-
-  # --- colour matching ----------------------------------------------------------
-  # Three small bowls fit across the reachable strip only at r=0.060; at the 0.075
-  # default they would overlap. A 0.060 bowl still measures ~9,500 px from nadir,
-  # comfortably above the 5,000 px bowl/cube threshold.
   - id: match3
     failure_mode: matching_3
     instruction: "Put every block in the bowl of its matching colour."

@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "66b76ff1e8814b7f",
+  "response": {
+    "input_tokens": 2555,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 316,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "Every block (red, green, and yellow) has been successfully placed into the bowl of its matching colour.",
+          "success": true
+        },
+        "id": "call_2303973",
+        "name": "report_done"
+      }
+    ]
+  }
+}

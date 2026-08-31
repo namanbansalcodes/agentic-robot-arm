@@ -9,16 +9,16 @@ from robotsim.world import WORKSPACE
 # One cell per scene. Horizon length and disturbance are the two independent
 # variables; the three memory modes reproduce RoboVoLo's Order / Swap / Recall.
 REQUIRED_FAILURE_MODES = {
-    "horizon_1", "horizon_2", "horizon_3", "horizon_4", "matching_3",
+    "horizon_1", "horizon_2", "horizon_3", "matching_3",
     "memory_order", "memory_swap", "memory_recall", "disturbance",
 }
 VALID_SUCCESS_TYPES = {"pairs", "ordered_pairs", "recall"}
 
 
-def test_loads_ten_scenes():
+def test_loads_the_declared_scene_set():
     scenes = load_scenes()
-    assert len(scenes) == 10
-    assert len({s.id for s in scenes}) == 10, "scene ids must be unique"
+    assert len(scenes) == 9
+    assert len({s.id for s in scenes}) == len(scenes), "scene ids must be unique"
 
 
 def test_every_failure_mode_is_covered():
@@ -52,7 +52,7 @@ def test_horizon_ladder_is_nested():
     meaning what the report says it means.
     """
     scenes = {s.id: s for s in load_scenes()}
-    ladder = [scenes[i] for i in ("h1_single", "h2_pair", "h3_triple", "h4_quad")]
+    ladder = [scenes[i] for i in ("h1_single", "h2_pair", "h3_triple")]
     previous = set()
     for scene, expected in zip(ladder, (1, 2, 3, 4)):
         blocks = {(o.name, o.position) for o in scene.objects if o.kind == "cube"}
@@ -130,3 +130,24 @@ def test_disturbance_blocks_are_parsed_and_land_inside_the_workspace():
 def test_failure_mode_and_disturbance_agree():
     for scene in load_scenes():
         assert (scene.failure_mode == "disturbance") == bool(scene.disturbance), scene.id
+
+
+def test_no_cube_shares_a_colour_with_a_bowl_in_the_same_scene():
+    """h4_quad paired a blue cube with a blue bowl. Held near the overhead camera the
+    cube's blob exceeds the 5,000 px bowl threshold, is classified as a bowl, and
+    steals the bowl's id -- leaving the real bowl unnameable for BOTH conditions. A
+    perfect scripted policy fails such a scene, so it measures perception, not the
+    agent. Scenes whose bowls are small and sparse survive it, so this is a warning
+    the suite encodes rather than a law of physics -- but a NEW scene should not
+    reintroduce it silently."""
+    offenders = []
+    for scene in load_scenes():
+        cube_colours = {o.color for o in scene.objects if o.kind == "cube"}
+        bowl_colours = {o.color for o in scene.objects if o.kind == "bowl"}
+        # a clash is only fatal when the bowls are full-size (r >= 0.07): a big bowl
+        # sets a high area bar that a held cube can cross.
+        big = {o.color for o in scene.objects if o.kind == "bowl" and o.radius >= 0.07}
+        fatal = cube_colours & big
+        if fatal:
+            offenders.append(f"{scene.id}: cube and full-size bowl share {sorted(fatal)}")
+    assert offenders == [], "\n".join(offenders)

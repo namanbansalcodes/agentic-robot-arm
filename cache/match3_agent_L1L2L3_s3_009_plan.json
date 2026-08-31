@@ -1,0 +1,19 @@
+{
+  "prompt_hash": "b52e6ee3fad0448b",
+  "response": {
+    "input_tokens": 2555,
+    "model": "gemini-robotics-er-2-preview",
+    "output_tokens": 1197,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "reason": "All blocks have been successfully placed in their matching bowls, as no more blocks are left to be placed in the current detection list.",
+          "success": true
+        },
+        "id": "call_1850295",
+        "name": "report_done"
+      }
+    ]
+  }
+}
