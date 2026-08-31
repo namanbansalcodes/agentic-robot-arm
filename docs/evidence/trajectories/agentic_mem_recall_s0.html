@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>agentic_mem_recall_s0</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f7f7f8; --panel: #ffffff; --ink: #16181d; --muted: #5c6270;
+  --line: #d8dbe2; --code-bg: #f0f1f4;
+  --good: #12694a; --good-bg: #dbf0e5;
+  --bad: #a01722; --bad-bg: #fbdfe1;
+  --warn: #7a5200; --warn-bg: #fbeecd;
+  --info: #1f4f8f; --info-bg: #dee9f8;
+  --neutral: #4a4f5a; --neutral-bg: #e8eaee;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a; --panel: #1c1f25; --ink: #e8eaf0; --muted: #9aa2b1;
+    --line: #333842; --code-bg: #23262d;
+    --good: #6fd6a6; --good-bg: #123527;
+    --bad: #ff9aa2; --bad-bg: #3d1519;
+    --warn: #f0c264; --warn-bg: #3a2c0c;
+    --info: #8fc0f5; --info-bg: #142740;
+    --neutral: #b3bac6; --neutral-bg: #262a31;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 1.6rem clamp(0.8rem, 4vw, 3rem); background: var(--bg);
+  color: var(--ink); font: 15px/1.55 ui-sans-serif, -apple-system, "Segoe UI",
+  Roboto, Helvetica, Arial, sans-serif; }
+main { max-width: 1080px; margin: 0 auto; }
+a { color: var(--info); }
+h1 { font-size: 1.35rem; margin: 0 0 0.2rem; }
+h2 { font-size: 1.05rem; margin: 2rem 0 0.6rem; }
+.muted { color: var(--muted); }
+.back { display: inline-block; margin-bottom: 1rem; font-size: 0.85rem; }
+.false-success-banner { background: var(--bad-bg); color: var(--bad);
+  border: 2px solid currentColor; border-radius: 8px; padding: 0.8rem 1rem;
+  font-weight: 700; letter-spacing: 0.01em; margin: 0 0 1.1rem; }
+.false-success-banner small { display: block; font-weight: 400; margin-top: 0.25rem;
+  letter-spacing: 0; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.55rem; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 0.9rem; }
+.meta div { min-width: 0; }
+.meta dt, .meta .k { color: var(--muted); font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.06em; }
+.meta .v { font-weight: 600; overflow-wrap: anywhere; }
+.outcomes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem; margin-bottom: 1.4rem; }
+.outcome { border: 1px solid var(--line); border-left-width: 5px; border-radius: 8px;
+  padding: 0.75rem 0.9rem; background: var(--panel); }
+.outcome-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted);
+  letter-spacing: 0.06em; }
+.outcome-value { font-size: 1.25rem; font-weight: 700; text-transform: capitalize; }
+.outcome-note { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+.claim-success, .truth-success { border-left-color: var(--good); }
+.claim-success .outcome-value, .truth-success .outcome-value { color: var(--good); }
+.claim-failure, .truth-failure { border-left-color: var(--bad); }
+.claim-failure .outcome-value, .truth-failure .outcome-value { color: var(--bad); }
+ol.steps { list-style: none; margin: 0; padding: 0; }
+.step { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 1rem;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 0.9rem; margin-bottom: 0.8rem; }
+@media (max-width: 640px) { .step { grid-template-columns: 1fr; } }
+.thumb img { width: 100%; height: auto; border-radius: 6px;
+  border: 1px solid var(--line); display: block; }
+.no-frame { display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 1 / 1; border: 1px dashed var(--line); border-radius: 6px;
+  color: var(--muted); font-size: 0.8rem; }
+.step-no { margin-top: 0.35rem; font-size: 0.72rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em; }
+.call { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  margin-bottom: 0.5rem; }
+.call code { background: var(--code-bg); padding: 0.1rem 0.4rem; border-radius: 4px;
+  font-weight: 700; }
+.args { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo,
+  monospace; font-size: 0.82rem; overflow-wrap: anywhere; }
+blockquote.reasoning { margin: 0 0 0.55rem; padding: 0.4rem 0 0.4rem 0.8rem;
+  border-left: 3px solid var(--line); color: var(--ink); white-space: pre-wrap; }
+pre.feedback, pre { background: var(--code-bg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 0.6rem 0.75rem; overflow-x: auto; margin: 0 0 0.55rem;
+  font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.chip, .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px;
+  font-size: 0.76rem; font-weight: 600; border: 1px solid currentColor; }
+.aperture-closed { color: var(--bad); background: var(--bad-bg); }
+.aperture-holding { color: var(--good); background: var(--good-bg); }
+.aperture-open { color: var(--warn); background: var(--warn-bg); }
+.aperture-between { color: var(--neutral); background: var(--neutral-bg); }
+.verdict-pass { color: var(--good); background: var(--good-bg); }
+.verdict-fail { color: var(--bad); background: var(--bad-bg); }
+.verdict-info { color: var(--info); background: var(--info-bg); }
+.verdict-none { color: var(--neutral); background: var(--neutral-bg); }
+.verdict-reason { margin-top: 0.3rem; font-size: 0.84rem; color: var(--muted);
+  overflow-wrap: anywhere; }
+.notice { background: var(--warn-bg); color: var(--warn); border: 1px solid
+  currentColor; border-radius: 8px; padding: 0.8rem 1rem; }
+footer { margin-top: 2rem; font-size: 0.8rem; color: var(--muted);
+  border-top: 1px solid var(--line); padding-top: 0.7rem; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="../report.html">&larr; back to the report</a>
+
+  <h1>agentic_mem_recall_s0</h1>
+  <p class="muted">Instruction: &ldquo;Put the blocks in the blue bowl. When you are done, take out the one that was already in the bowl when you started and leave it on the table.&rdquo;</p>
+  <div class="meta">
+    <div><div class="k">condition</div><div class="v">agentic</div></div>
+    <div><div class="k">scene</div><div class="v">mem_recall</div></div>
+    <div><div class="k">seed</div><div class="v">0</div></div>
+    <div><div class="k">failure mode</div><div class="v">memory_recall</div></div>
+    <div><div class="k">steps</div><div class="v">25</div></div>
+    <div><div class="k">recoveries</div><div class="v">2</div></div>
+    <div><div class="k">escalated to human</div><div class="v">yes</div></div>
+    <div><div class="k">vlm calls</div><div class="v">35</div></div>
+    <div><div class="k">l3 checks</div><div class="v">11</div></div>
+    <div><div class="k">cost</div><div class="v">$0.3093</div></div>
+    <div><div class="k">wall seconds</div><div class="v">172.9</div></div>
+    <div><div class="k">stop reason</div><div class="v">step budget exhausted</div></div>
+  </div>
+    <div class="outcomes">
+      <div class="outcome claim-failure">
+        <div class="outcome-label">agent claimed</div>
+        <div class="outcome-value">failure</div>
+        <div class="outcome-note">step budget exhausted before the task was verified complete</div>
+      </div>
+      <div class="outcome truth-failure">
+        <div class="outcome-label">oracle measured</div>
+        <div class="outcome-value">failure</div>
+        <div class="outcome-note">ground truth, read after the scene settled</div>
+      </div>
+    </div>
+  <h2>Trajectory</h2>
+  <ol class="steps">
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_001_overhead.png" alt="frame after step 1" loading="lazy"><div class="step-no">step 1</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-closed">0.0000 m &middot; closed on air</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0000   [closed on air]
+ee_position   : [-0.268, -0.000, 0.411]
+visible ids   : red_cube_1 (middle-left of the overhead photo), green_cube_1 (middle-right of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 1</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_002_overhead.png" alt="frame after step 2" loading="lazy"><div class="step-no">step 2</div></div>
+      <div class="detail">
+        <div class="call"><code>grasp</code>
+          <span class="args">object_id=&#x27;green_cube_1&#x27;</span><span class="chip aperture aperture-holding">0.0442 m &middot; holding</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0442   [holding]
+ee_position   : [-0.012, -0.151, 0.194]
+visible ids   : red_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo)
+sim_steps     : 77</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_003_overhead.png" alt="frame after step 3" loading="lazy"><div class="step-no">step 3</div></div>
+      <div class="detail">
+        <div class="call"><code>place</code>
+          <span class="args">target_id=&#x27;blue_bowl_1&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.049, 0.117, 0.195]
+visible ids   : red_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 157</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_004_overhead.png" alt="frame after step 4" loading="lazy"><div class="step-no">step 4</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.272, 0.002, 0.405]
+visible ids   : red_cube_1 (middle-left of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 158</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_005_overhead.png" alt="frame after step 5" loading="lazy"><div class="step-no">step 5</div></div>
+      <div class="detail">
+        <div class="call"><code>grasp</code>
+          <span class="args">object_id=&#x27;yellow_cube_1&#x27;</span><span class="chip aperture aperture-holding">0.0484 m &middot; holding</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0484   [holding]
+ee_position   : [-0.136, -0.156, 0.195]
+visible ids   : red_cube_1 (middle-left of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 237</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_006_overhead.png" alt="frame after step 6" loading="lazy"><div class="step-no">step 6</div></div>
+      <div class="detail">
+        <div class="call"><code>place</code>
+          <span class="args">target_id=&#x27;blue_bowl_1&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [0.010, 0.123, 0.196]
+visible ids   : blue_cube_1 (middle-centre of the overhead photo)
+sim_steps     : 319</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_007_overhead.png" alt="frame after step 7" loading="lazy"><div class="step-no">step 7</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.271, 0.001, 0.410]
+visible ids   : red_cube_1 (middle-left of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-centre of the overhead photo)
+sim_steps     : 320</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_008_overhead.png" alt="frame after step 8" loading="lazy"><div class="step-no">step 8</div></div>
+      <div class="detail">
+        <div class="call"><code>grasp</code>
+          <span class="args">object_id=&#x27;red_cube_1&#x27;</span><span class="chip aperture aperture-holding">0.0597 m &middot; holding</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0597   [holding]
+ee_position   : [-0.016, 0.164, 0.195]
+visible ids   : blue_cube_1 (middle-left of the overhead photo), blue_cube_2 (middle-centre of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 488</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_009_overhead.png" alt="frame after step 9" loading="lazy"><div class="step-no">step 9</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-between">0.0605 m &middot; between bands</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0605   [between bands]
+ee_position   : [-0.270, 0.003, 0.404]
+visible ids   : green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 489</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_010_overhead.png" alt="frame after step 10" loading="lazy"><div class="step-no">step 10</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-between">0.0605 m &middot; between bands</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0605   [between bands]
+ee_position   : [-0.270, 0.003, 0.404]
+visible ids   : green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 490</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_011_overhead.png" alt="frame after step 11" loading="lazy"><div class="step-no">step 11</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-between">0.0605 m &middot; between bands</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0605   [between bands]
+ee_position   : [-0.270, 0.003, 0.404]
+visible ids   : green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 491</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_012_overhead.png" alt="frame after step 12" loading="lazy"><div class="step-no">step 12</div></div>
+      <div class="detail">
+        <div class="call"><code>grasp</code>
+          <span class="args">object_id=&#x27;green_cube_1&#x27;</span><span class="chip aperture aperture-between">0.0605 m &middot; between bands</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : error
+error         : already_holding: the gripper is already holding a block (aperture 0.0605 m). Place it before grasping another.
+aperture (m)  : 0.0605   [between bands]
+ee_position   : [-0.270, 0.003, 0.404]
+visible ids   : green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 491</pre>
+        <div class="verdict"><span class="badge verdict-fail">L1 objected</span><div class="verdict-reason">already_holding: the gripper is already holding a block (aperture 0.0605 m). Place it before grasping another.</div></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_013_overhead.png" alt="frame after step 13" loading="lazy"><div class="step-no">step 13</div></div>
+      <div class="detail">
+        <div class="call"><code>place</code>
+          <span class="args">target_id=&#x27;yellow_cube_1&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [0.046, -0.057, 0.196]
+visible ids   : green_cube_1 (middle-left of the overhead photo), blue_cube_1 (middle-centre of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 577</pre>
+        <div class="verdict"><span class="badge verdict-fail">L3 objected</span><div class="verdict-reason">visual check failed: Is the block inside the yellow cube 1? -&gt; no
+The yellow cube is a solid block, not a container.</div></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_014_overhead.png" alt="frame after step 14" loading="lazy"><div class="step-no">step 14</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.266, -0.001, 0.411]
+visible ids   : red_cube_1 (middle-centre of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 578</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_015_overhead.png" alt="frame after step 15" loading="lazy"><div class="step-no">step 15</div></div>
+      <div class="detail">
+        <div class="call"><code>place</code>
+          <span class="args">target_id=&#x27;blue_bowl_1&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [0.004, 0.173, 0.196]
+visible ids   : red_cube_1 (middle-centre of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_cube_1 (middle-left of the overhead photo), blue_cube_2 (middle-centre of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 662</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_016_overhead.png" alt="frame after step 16" loading="lazy"><div class="step-no">step 16</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.271, 0.002, 0.409]
+visible ids   : red_cube_1 (middle-centre of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 663</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_017_overhead.png" alt="frame after step 17" loading="lazy"><div class="step-no">step 17</div></div>
+      <div class="detail">
+        <div class="call"><code>grasp</code>
+          <span class="args">object_id=&#x27;green_cube_1&#x27;</span><span class="chip aperture aperture-holding">0.0510 m &middot; holding</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0510   [holding]
+ee_position   : [-0.026, 0.137, 0.195]
+visible ids   : red_cube_1 (middle-centre of the overhead photo), blue_cube_1 (middle-left of the overhead photo), blue_cube_2 (middle-centre of the overhead photo), blue_cube_3 (middle-centre of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 831</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_018_overhead.png" alt="frame after step 18" loading="lazy"><div class="step-no">step 18</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-holding">0.0510 m &middot; holding</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0510   [holding]
+ee_position   : [-0.270, 0.002, 0.405]
+visible ids   : red_cube_1 (middle-centre of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 832</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_019_overhead.png" alt="frame after step 19" loading="lazy"><div class="step-no">step 19</div></div>
+      <div class="detail">
+        <div class="call"><code>place</code>
+          <span class="args">target_id=&#x27;blue_bowl_1&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.034, 0.170, 0.195]
+visible ids   : red_cube_1 (middle-centre of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 914</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_020_overhead.png" alt="frame after step 20" loading="lazy"><div class="step-no">step 20</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.271, 0.003, 0.404]
+visible ids   : red_cube_1 (middle-centre of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 915</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_021_overhead.png" alt="frame after step 21" loading="lazy"><div class="step-no">step 21</div></div>
+      <div class="detail">
+        <div class="call"><code>grasp</code>
+          <span class="args">object_id=&#x27;red_cube_1&#x27;</span><span class="chip aperture aperture-holding">0.0462 m &middot; holding</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0462   [holding]
+ee_position   : [0.025, -0.061, 0.195]
+visible ids   : green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 993</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_022_overhead.png" alt="frame after step 22" loading="lazy"><div class="step-no">step 22</div></div>
+      <div class="detail">
+        <div class="call"><code>place</code>
+          <span class="args">target_id=&#x27;blue_bowl_1&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [0.000, 0.133, 0.195]
+visible ids   : red_cube_1 (middle-centre of the overhead photo), blue_cube_1 (middle-centre of the overhead photo), blue_cube_2 (middle-centre of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 1071</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_023_overhead.png" alt="frame after step 23" loading="lazy"><div class="step-no">step 23</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.268, 0.002, 0.405]
+visible ids   : red_cube_1 (middle-left of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 1072</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_024_overhead.png" alt="frame after step 24" loading="lazy"><div class="step-no">step 24</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.268, 0.002, 0.405]
+visible ids   : red_cube_1 (middle-left of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 1073</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/agentic_mem_recall_s0_025_overhead.png" alt="frame after step 25" loading="lazy"><div class="step-no">step 25</div></div>
+      <div class="detail">
+        <div class="call"><code>ask_human</code>
+          <span class="args">question=&#x27;Which block (red, green, or yellow) was already in the bowl when the task started?&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.268, 0.002, 0.405]
+visible ids   : red_cube_1 (middle-left of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (middle-left of the overhead photo)
+sim_steps     : 1073
+note          : human replied: The operator has no additional instruction for this task -- the original instruction is all the information available.</pre>
+        <div class="verdict"><span class="badge verdict-pass">passed</span></div>
+      </div>
+    </li>
+  </ol>
+  <footer>Generated by <code>python -m harness.report</code>. Every number and every frame on this page comes from the episode record &mdash; nothing here is hand-written.</footer>
+</main>
+</body>
+</html>

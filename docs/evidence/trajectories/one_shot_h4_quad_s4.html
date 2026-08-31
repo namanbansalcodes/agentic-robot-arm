@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>one_shot_h4_quad_s4</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f7f7f8; --panel: #ffffff; --ink: #16181d; --muted: #5c6270;
+  --line: #d8dbe2; --code-bg: #f0f1f4;
+  --good: #12694a; --good-bg: #dbf0e5;
+  --bad: #a01722; --bad-bg: #fbdfe1;
+  --warn: #7a5200; --warn-bg: #fbeecd;
+  --info: #1f4f8f; --info-bg: #dee9f8;
+  --neutral: #4a4f5a; --neutral-bg: #e8eaee;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a; --panel: #1c1f25; --ink: #e8eaf0; --muted: #9aa2b1;
+    --line: #333842; --code-bg: #23262d;
+    --good: #6fd6a6; --good-bg: #123527;
+    --bad: #ff9aa2; --bad-bg: #3d1519;
+    --warn: #f0c264; --warn-bg: #3a2c0c;
+    --info: #8fc0f5; --info-bg: #142740;
+    --neutral: #b3bac6; --neutral-bg: #262a31;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 1.6rem clamp(0.8rem, 4vw, 3rem); background: var(--bg);
+  color: var(--ink); font: 15px/1.55 ui-sans-serif, -apple-system, "Segoe UI",
+  Roboto, Helvetica, Arial, sans-serif; }
+main { max-width: 1080px; margin: 0 auto; }
+a { color: var(--info); }
+h1 { font-size: 1.35rem; margin: 0 0 0.2rem; }
+h2 { font-size: 1.05rem; margin: 2rem 0 0.6rem; }
+.muted { color: var(--muted); }
+.back { display: inline-block; margin-bottom: 1rem; font-size: 0.85rem; }
+.false-success-banner { background: var(--bad-bg); color: var(--bad);
+  border: 2px solid currentColor; border-radius: 8px; padding: 0.8rem 1rem;
+  font-weight: 700; letter-spacing: 0.01em; margin: 0 0 1.1rem; }
+.false-success-banner small { display: block; font-weight: 400; margin-top: 0.25rem;
+  letter-spacing: 0; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.55rem; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 0.9rem; }
+.meta div { min-width: 0; }
+.meta dt, .meta .k { color: var(--muted); font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.06em; }
+.meta .v { font-weight: 600; overflow-wrap: anywhere; }
+.outcomes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem; margin-bottom: 1.4rem; }
+.outcome { border: 1px solid var(--line); border-left-width: 5px; border-radius: 8px;
+  padding: 0.75rem 0.9rem; background: var(--panel); }
+.outcome-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted);
+  letter-spacing: 0.06em; }
+.outcome-value { font-size: 1.25rem; font-weight: 700; text-transform: capitalize; }
+.outcome-note { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+.claim-success, .truth-success { border-left-color: var(--good); }
+.claim-success .outcome-value, .truth-success .outcome-value { color: var(--good); }
+.claim-failure, .truth-failure { border-left-color: var(--bad); }
+.claim-failure .outcome-value, .truth-failure .outcome-value { color: var(--bad); }
+ol.steps { list-style: none; margin: 0; padding: 0; }
+.step { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 1rem;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 0.9rem; margin-bottom: 0.8rem; }
+@media (max-width: 640px) { .step { grid-template-columns: 1fr; } }
+.thumb img { width: 100%; height: auto; border-radius: 6px;
+  border: 1px solid var(--line); display: block; }
+.no-frame { display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 1 / 1; border: 1px dashed var(--line); border-radius: 6px;
+  color: var(--muted); font-size: 0.8rem; }
+.step-no { margin-top: 0.35rem; font-size: 0.72rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em; }
+.call { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  margin-bottom: 0.5rem; }
+.call code { background: var(--code-bg); padding: 0.1rem 0.4rem; border-radius: 4px;
+  font-weight: 700; }
+.args { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo,
+  monospace; font-size: 0.82rem; overflow-wrap: anywhere; }
+blockquote.reasoning { margin: 0 0 0.55rem; padding: 0.4rem 0 0.4rem 0.8rem;
+  border-left: 3px solid var(--line); color: var(--ink); white-space: pre-wrap; }
+pre.feedback, pre { background: var(--code-bg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 0.6rem 0.75rem; overflow-x: auto; margin: 0 0 0.55rem;
+  font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.chip, .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px;
+  font-size: 0.76rem; font-weight: 600; border: 1px solid currentColor; }
+.aperture-closed { color: var(--bad); background: var(--bad-bg); }
+.aperture-holding { color: var(--good); background: var(--good-bg); }
+.aperture-open { color: var(--warn); background: var(--warn-bg); }
+.aperture-between { color: var(--neutral); background: var(--neutral-bg); }
+.verdict-pass { color: var(--good); background: var(--good-bg); }
+.verdict-fail { color: var(--bad); background: var(--bad-bg); }
+.verdict-info { color: var(--info); background: var(--info-bg); }
+.verdict-none { color: var(--neutral); background: var(--neutral-bg); }
+.verdict-reason { margin-top: 0.3rem; font-size: 0.84rem; color: var(--muted);
+  overflow-wrap: anywhere; }
+.notice { background: var(--warn-bg); color: var(--warn); border: 1px solid
+  currentColor; border-radius: 8px; padding: 0.8rem 1rem; }
+footer { margin-top: 2rem; font-size: 0.8rem; color: var(--muted);
+  border-top: 1px solid var(--line); padding-top: 0.7rem; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="../report.html">&larr; back to the report</a>
+
+  <h1>one_shot_h4_quad_s4</h1>
+  <p class="muted">Instruction: &ldquo;Put all the blocks in the blue bowl.&rdquo;</p>
+  <div class="meta">
+    <div><div class="k">condition</div><div class="v">one_shot</div></div>
+    <div><div class="k">scene</div><div class="v">h4_quad</div></div>
+    <div><div class="k">seed</div><div class="v">4</div></div>
+    <div><div class="k">failure mode</div><div class="v">horizon_4</div></div>
+    <div><div class="k">steps</div><div class="v">10</div></div>
+    <div><div class="k">recoveries</div><div class="v">0</div></div>
+    <div><div class="k">escalated to human</div><div class="v">no</div></div>
+    <div><div class="k">vlm calls</div><div class="v">1</div></div>
+    <div><div class="k">l3 checks</div><div class="v">0</div></div>
+    <div><div class="k">cost</div><div class="v">$0.0146</div></div>
+    <div><div class="k">wall seconds</div><div class="v">25.0</div></div>
+    <div><div class="k">stop reason</div><div class="v">agent called report_done</div></div>
+  </div>
+    <div class="outcomes">
+      <div class="outcome claim-success">
+        <div class="outcome-label">agent claimed</div>
+        <div class="outcome-value">success</div>
+        <div class="outcome-note">All blocks (red, green, blue, yellow) have been grasped and placed in the blue bowl.</div>
+      </div>
+      <div class="outcome truth-success">
+        <div class="outcome-label">oracle measured</div>
+        <div class="outcome-value">success</div>
+        <div class="outcome-note">ground truth, read after the scene settled</div>
+      </div>
+    </div>
+  <h2>Trajectory</h2>
+  <ol class="steps">
+    <li class="step">
+      <div class="thumb"><img src="../images/one_shot_h4_quad_s4_001_overhead.png" alt="frame after step 1" loading="lazy"><div class="step-no">step 1</div></div>
+      <div class="detail">
+        <div class="call"><code>look</code>
+          <span class="args">no arguments</span><span class="chip aperture aperture-closed">0.0000 m &middot; closed on air</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0000   [closed on air]
+ee_position   : [-0.268, -0.000, 0.411]
+visible ids   : red_cube_1 (middle-right of the overhead photo), green_cube_1 (middle-right of the overhead photo), blue_cube_1 (middle-centre of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 1</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/one_shot_h4_quad_s4_002_overhead.png" alt="frame after step 2" loading="lazy"><div class="step-no">step 2</div></div>
+      <div class="detail">
+        <div class="call"><code>grasp</code>
+          <span class="args">object_id=&#x27;red_cube_1&#x27;</span><span class="chip aperture aperture-holding">0.0441 m &middot; holding</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0441   [holding]
+ee_position   : [0.112, -0.160, 0.196]
+visible ids   : green_cube_1 (middle-right of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 87</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/one_shot_h4_quad_s4_003_overhead.png" alt="frame after step 3" loading="lazy"><div class="step-no">step 3</div></div>
+      <div class="detail">
+        <div class="call"><code>place</code>
+          <span class="args">target_id=&#x27;blue_bowl_1&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [0.021, 0.192, 0.196]
+visible ids   : green_cube_1 (middle-right of the overhead photo), blue_cube_1 (middle-centre of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 169</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/one_shot_h4_quad_s4_004_overhead.png" alt="frame after step 4" loading="lazy"><div class="step-no">step 4</div></div>
+      <div class="detail">
+        <div class="call"><code>grasp</code>
+          <span class="args">object_id=&#x27;green_cube_1&#x27;</span><span class="chip aperture aperture-holding">0.0409 m &middot; holding</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0409   [holding]
+ee_position   : [-0.009, -0.171, 0.194]
+visible ids   : red_cube_1 (middle-left of the overhead photo), blue_cube_1 (middle-centre of the overhead photo), blue_bowl_1 (middle-left of the overhead photo)
+sim_steps     : 245</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/one_shot_h4_quad_s4_005_overhead.png" alt="frame after step 5" loading="lazy"><div class="step-no">step 5</div></div>
+      <div class="detail">
+        <div class="call"><code>place</code>
+          <span class="args">target_id=&#x27;blue_bowl_1&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.040, 0.128, 0.195]
+visible ids   : red_cube_1 (middle-left of the overhead photo), blue_cube_1 (middle-centre of the overhead photo), blue_cube_2 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 325</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/one_shot_h4_quad_s4_006_overhead.png" alt="frame after step 6" loading="lazy"><div class="step-no">step 6</div></div>
+      <div class="detail">
+        <div class="call"><code>grasp</code>
+          <span class="args">object_id=&#x27;blue_cube_1&#x27;</span><span class="chip aperture aperture-holding">0.0495 m &middot; holding</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0495   [holding]
+ee_position   : [0.108, -0.049, 0.196]
+visible ids   : red_cube_1 (middle-left of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 403</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/one_shot_h4_quad_s4_007_overhead.png" alt="frame after step 7" loading="lazy"><div class="step-no">step 7</div></div>
+      <div class="detail">
+        <div class="call"><code>place</code>
+          <span class="args">target_id=&#x27;blue_bowl_1&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [-0.043, 0.198, 0.195]
+visible ids   : red_cube_1 (middle-left of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 482</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/one_shot_h4_quad_s4_008_overhead.png" alt="frame after step 8" loading="lazy"><div class="step-no">step 8</div></div>
+      <div class="detail">
+        <div class="call"><code>grasp</code>
+          <span class="args">object_id=&#x27;yellow_cube_1&#x27;</span><span class="chip aperture aperture-holding">0.0457 m &middot; holding</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0457   [holding]
+ee_position   : [-0.136, -0.164, 0.195]
+visible ids   : red_cube_1 (middle-left of the overhead photo), green_cube_1 (middle-left of the overhead photo), blue_bowl_1 (middle-left of the overhead photo), yellow_cube_1 (bottom-right of the overhead photo)
+sim_steps     : 561</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/one_shot_h4_quad_s4_009_overhead.png" alt="frame after step 9" loading="lazy"><div class="step-no">step 9</div></div>
+      <div class="detail">
+        <div class="call"><code>place</code>
+          <span class="args">target_id=&#x27;blue_bowl_1&#x27;</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [0.018, 0.128, 0.196]
+visible ids   : blue_cube_1 (middle-centre of the overhead photo)
+sim_steps     : 643</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="thumb"><img src="../images/one_shot_h4_quad_s4_010_overhead.png" alt="frame after step 10" loading="lazy"><div class="step-no">step 10</div></div>
+      <div class="detail">
+        <div class="call"><code>report_done</code>
+          <span class="args">reason=&#x27;All blocks (red, green, blue, yellow) have been grasped and placed in the blue bowl.&#x27;, success=True</span><span class="chip aperture aperture-open">0.0800 m &middot; open / empty</span></div>
+        <p class="muted">no reasoning text on this step</p>
+        <pre class="feedback">status        : ok
+aperture (m)  : 0.0800   [open / empty]
+ee_position   : [0.018, 0.128, 0.196]
+visible ids   : blue_cube_1 (middle-centre of the overhead photo)
+sim_steps     : 643
+note          : agent claims success=True: All blocks (red, green, blue, yellow) have been grasped and placed in the blue bowl.</pre>
+        <div class="verdict"><span class="badge verdict-none">not checked</span></div>
+      </div>
+    </li>
+  </ol>
+  <footer>Generated by <code>python -m harness.report</code>. Every number and every frame on this page comes from the episode record &mdash; nothing here is hand-written.</footer>
+</main>
+</body>
+</html>

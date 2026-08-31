@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evidence pack</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f7f7f8; --panel: #ffffff; --ink: #16181d; --muted: #5c6270;
+  --line: #d8dbe2; --code-bg: #f0f1f4;
+  --good: #12694a; --good-bg: #dbf0e5;
+  --bad: #a01722; --bad-bg: #fbdfe1;
+  --warn: #7a5200; --warn-bg: #fbeecd;
+  --info: #1f4f8f; --info-bg: #dee9f8;
+  --neutral: #4a4f5a; --neutral-bg: #e8eaee;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a; --panel: #1c1f25; --ink: #e8eaf0; --muted: #9aa2b1;
+    --line: #333842; --code-bg: #23262d;
+    --good: #6fd6a6; --good-bg: #123527;
+    --bad: #ff9aa2; --bad-bg: #3d1519;
+    --warn: #f0c264; --warn-bg: #3a2c0c;
+    --info: #8fc0f5; --info-bg: #142740;
+    --neutral: #b3bac6; --neutral-bg: #262a31;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 1.6rem clamp(0.8rem, 4vw, 3rem); background: var(--bg);
+  color: var(--ink); font: 15px/1.55 ui-sans-serif, -apple-system, "Segoe UI",
+  Roboto, Helvetica, Arial, sans-serif; }
+main { max-width: 1080px; margin: 0 auto; }
+a { color: var(--info); }
+h1 { font-size: 1.35rem; margin: 0 0 0.2rem; }
+h2 { font-size: 1.05rem; margin: 2rem 0 0.6rem; }
+.muted { color: var(--muted); }
+.back { display: inline-block; margin-bottom: 1rem; font-size: 0.85rem; }
+.false-success-banner { background: var(--bad-bg); color: var(--bad);
+  border: 2px solid currentColor; border-radius: 8px; padding: 0.8rem 1rem;
+  font-weight: 700; letter-spacing: 0.01em; margin: 0 0 1.1rem; }
+.false-success-banner small { display: block; font-weight: 400; margin-top: 0.25rem;
+  letter-spacing: 0; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.55rem; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 0.9rem; }
+.meta div { min-width: 0; }
+.meta dt, .meta .k { color: var(--muted); font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.06em; }
+.meta .v { font-weight: 600; overflow-wrap: anywhere; }
+.outcomes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem; margin-bottom: 1.4rem; }
+.outcome { border: 1px solid var(--line); border-left-width: 5px; border-radius: 8px;
+  padding: 0.75rem 0.9rem; background: var(--panel); }
+.outcome-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted);
+  letter-spacing: 0.06em; }
+.outcome-value { font-size: 1.25rem; font-weight: 700; text-transform: capitalize; }
+.outcome-note { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+.claim-success, .truth-success { border-left-color: var(--good); }
+.claim-success .outcome-value, .truth-success .outcome-value { color: var(--good); }
+.claim-failure, .truth-failure { border-left-color: var(--bad); }
+.claim-failure .outcome-value, .truth-failure .outcome-value { color: var(--bad); }
+ol.steps { list-style: none; margin: 0; padding: 0; }
+.step { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 1rem;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 0.9rem; margin-bottom: 0.8rem; }
+@media (max-width: 640px) { .step { grid-template-columns: 1fr; } }
+.thumb img { width: 100%; height: auto; border-radius: 6px;
+  border: 1px solid var(--line); display: block; }
+.no-frame { display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 1 / 1; border: 1px dashed var(--line); border-radius: 6px;
+  color: var(--muted); font-size: 0.8rem; }
+.step-no { margin-top: 0.35rem; font-size: 0.72rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em; }
+.call { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  margin-bottom: 0.5rem; }
+.call code { background: var(--code-bg); padding: 0.1rem 0.4rem; border-radius: 4px;
+  font-weight: 700; }
+.args { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo,
+  monospace; font-size: 0.82rem; overflow-wrap: anywhere; }
+blockquote.reasoning { margin: 0 0 0.55rem; padding: 0.4rem 0 0.4rem 0.8rem;
+  border-left: 3px solid var(--line); color: var(--ink); white-space: pre-wrap; }
+pre.feedback, pre { background: var(--code-bg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 0.6rem 0.75rem; overflow-x: auto; margin: 0 0 0.55rem;
+  font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.chip, .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px;
+  font-size: 0.76rem; font-weight: 600; border: 1px solid currentColor; }
+.aperture-closed { color: var(--bad); background: var(--bad-bg); }
+.aperture-holding { color: var(--good); background: var(--good-bg); }
+.aperture-open { color: var(--warn); background: var(--warn-bg); }
+.aperture-between { color: var(--neutral); background: var(--neutral-bg); }
+.verdict-pass { color: var(--good); background: var(--good-bg); }
+.verdict-fail { color: var(--bad); background: var(--bad-bg); }
+.verdict-info { color: var(--info); background: var(--info-bg); }
+.verdict-none { color: var(--neutral); background: var(--neutral-bg); }
+.verdict-reason { margin-top: 0.3rem; font-size: 0.84rem; color: var(--muted);
+  overflow-wrap: anywhere; }
+.notice { background: var(--warn-bg); color: var(--warn); border: 1px solid
+  currentColor; border-radius: 8px; padding: 0.8rem 1rem; }
+footer { margin-top: 2rem; font-size: 0.8rem; color: var(--muted);
+  border-top: 1px solid var(--line); padding-top: 0.7rem; }
+
+.table-wrap { margin: 0 0 1.2rem; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { border: 1px solid var(--line); padding: 0.35rem 0.55rem; text-align: left;
+  white-space: nowrap; }
+th { background: var(--code-bg); font-weight: 700; }
+tbody tr:nth-child(even) { background: color-mix(in srgb, var(--panel) 92%,
+  var(--line)); }
+figcaption { font-size: 0.82rem; color: var(--muted); padding-top: 0.4rem;
+  white-space: normal; }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 1rem 1.15rem; margin-bottom: 1.1rem; }
+section > h2 { margin-top: 0; }
+section p { max-width: 78ch; }
+ul.episodes { list-style: none; padding-left: 0; }
+ul.episodes li { padding: 0.15rem 0; font-size: 0.92rem; }
+h3.group { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); margin: 0.9rem 0 0.25rem; }
+.chart { overflow-x: auto; }
+
+td.pick { white-space: normal; vertical-align: top; max-width: 30ch; }
+td.pick .v { font-weight: 700; margin-top: 0.2rem; }
+td.pick .n { font-size: 0.8rem; color: var(--muted); }
+td.pick.bad { border-left: 4px solid var(--bad); }
+td.pick.bad .v { color: var(--bad); }
+td.pick.good { border-left: 4px solid var(--good); }
+td.pick.good .v { color: var(--good); }
+td.empty { color: var(--muted); }
+th.mode { background: var(--code-bg); }
+</style>
+</head>
+<body>
+<main>
+<h1>Evidence: the same scene, told two ways</h1>
+<p class="muted">One representative episode per failure mode, for the blind open-loop baseline and for the full self-verifying agent. Same model, same primitives, same scene, same budget &mdash; the only difference is whether the agent reads its own feedback. Start with <a href="report.html">report.html</a> for the numbers; <code>episodes.jsonl</code> is the full record every number came from.</p>
+<table><thead><tr><th>experimental cell</th><th>one_shot (open-loop)</th><th>agentic (loop + verification)</th></tr></thead><tbody>
+<tr><th class="mode">disturbance</th><td class="pick bad"><a href="trajectories/one_shot_disturb_h3_s0.html">one_shot_disturb_h3_s0</a><div class="v">FALSE SUCCESS</div><div class="n">claimed success &middot; oracle failure</div><div class="n">&ldquo;All blocks are placed in the blue bowl.&rdquo;</div></td><td class="pick good"><a href="trajectories/agentic_disturb_h3_s0.html">agentic_disturb_h3_s0</a><div class="v">success</div><div class="n">claimed success &middot; oracle success</div><div class="n">&ldquo;All blocks (yellow, green, and red cubes) are already in the blue bowl.&rdquo;</div></td></tr>
+<tr><th class="mode">horizon_4</th><td class="pick good"><a href="trajectories/one_shot_h4_quad_s4.html">one_shot_h4_quad_s4</a><div class="v">success</div><div class="n">claimed success &middot; oracle success</div><div class="n">&ldquo;All blocks (red, green, blue, yellow) have been grasped and placed in the blue bowl.&rdquo;</div></td><td class="pick good"><a href="trajectories/agentic_h4_quad_s4.html">agentic_h4_quad_s4</a><div class="v">success</div><div class="n">claimed success &middot; oracle success</div><div class="n">&ldquo;All blocks (red, green, and yellow) are already in the blue bowl.&rdquo;</div></td></tr>
+<tr><th class="mode">matching_3</th><td class="pick good"><a href="trajectories/one_shot_match3_s2.html">one_shot_match3_s2</a><div class="v">success</div><div class="n">claimed success &middot; oracle success</div><div class="n">&ldquo;Every block has been placed in its matching color bowl.&rdquo;</div></td><td class="pick good"><a href="trajectories/agentic_match3_s1.html">agentic_match3_s1</a><div class="v">success</div><div class="n">claimed success &middot; oracle success</div><div class="n">&ldquo;Every block (red, green, and yellow) has been successfully placed into the bowl of its matching colour.&rdquo;</div></td></tr>
+<tr><th class="mode">memory_recall</th><td class="empty">not run in this condition</td><td class="pick neutral"><a href="trajectories/agentic_mem_recall_s0.html">agentic_mem_recall_s0</a><div class="v">honest failure</div><div class="n">claimed failure &middot; oracle failure</div><div class="n">&ldquo;step budget exhausted before the task was verified complete&rdquo;</div></td></tr>
+<tr><th class="mode">memory_swap</th><td class="pick good"><a href="trajectories/one_shot_mem_swap_s3.html">one_shot_mem_swap_s3</a><div class="v">success</div><div class="n">claimed success &middot; oracle success</div><div class="n">&ldquo;Successfully swapped the red block to the red bowl and the green block to the green bowl.&rdquo;</div></td><td class="pick good"><a href="trajectories/agentic_mem_swap_s0.html">agentic_mem_swap_s0</a><div class="v">success</div><div class="n">claimed success &middot; oracle success</div><div class="n">&ldquo;Each block has been placed into the bowl of its own colour: the red block is in the red bowl, and the green block is in the green bowl.&rdquo;</div></td></tr>
+</tbody></table>
+<p class="muted">Drawn from 45 episodes, of which <strong>18</strong> ended in a false success.</p>
+</main>
+</body>
+</html>
